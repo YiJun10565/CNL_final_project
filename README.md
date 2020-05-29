@@ -1,4 +1,10 @@
 # CNL_final_project
 NTU 2020 spring  CNL final project
 
-Hi
+Recording  group 
+GUI	   group
+Connection group
+
+todo feature : 
+maybe group later
+
