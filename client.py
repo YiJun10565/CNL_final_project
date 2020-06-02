@@ -30,7 +30,7 @@ if "__name__" == "__main__":
     #====Check username & password====
 	confirm = 0
 	while(not confirm):
-	    #===========Login============
+	    #===========Loggin============
         Username = input('Please enter your name: ')
         Password = input('Password: ')
 	    data = Username + ',' + Password + '\n'

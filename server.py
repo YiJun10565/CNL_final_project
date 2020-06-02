@@ -52,9 +52,6 @@ if "__name__" == "__main__":
 	
     #======Start Listening======
     listening = thread_accept_client(server, client_list)
-	
-    #======Start Listening======
-    listening = thread_accept_client(server)
     listening.start()
     
 
