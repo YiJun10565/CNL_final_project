@@ -17,15 +17,15 @@ class thread_accept_client(threading.Thread):
     		recv_data = self.socket.recv(1024)
     		recv_data = recv_data.decode('utf-8').split(',')
 			if(): #Check if user is valid
-        		self.list.append({"host":host,
+        	    self.list.append({"host":host,
                                   "port":port,
                                   "usrname":recv_data[0],
                                   "passwd":recv_data[1],
                                   "Socket":connect
                                  })
-		   else:
-		       connect.sendall(b'Username or password isn\'t correct.')
-			   connect.close()
+	            connect.sendall(b'ACK')
+		    else:
+		        connect.sendall(b'NEG')
         
     def stop(self):
         self._stop_event.set()

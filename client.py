@@ -21,17 +21,27 @@ class thread_recv_sound(threading.Thread):
 
 
 if "__name__" == "__main__":
-    #===========Login============
-    Username = input('Please enter your name: ')
-    Password = input('Password: ')
-
     #======Connect to Server=====
     IP = '127.0.0.1'
     port = 9999
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((IP, port)) #Server IP & Port
-    #Todo: Check username & password
-
+	
+    #====Check username & password====
+	confirm = 0
+	while(not confirm):
+	    #===========Login============
+        Username = input('Please enter your name: ')
+        Password = input('Password: ')
+	    data = Username + ',' + Password + '\n'
+	    data = data.encode('utf-8')
+        client.sendall(data)
+		data = client.recv(1024)
+		if(data == b'ACK'):
+		    print("Loggin Success!!")
+			confirm = 1
+		else:
+		    print("Username or password isn\'t correct.")
     
     #======Create Thread to Recieve msg======
     recv_sound = thread_recv_sound(client)
