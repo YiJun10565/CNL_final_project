@@ -16,7 +16,7 @@ class thread_accept_client(threading.Thread):
     		print(u'the client %s:%s has connected.' % (host, port))
     		recv_data = self.socket.recv(1024)
     		recv_data = recv_data.decode('utf-8').split(',')
-			if(): #Check if user is valid
+		if(): #Check if user is valid
         	    self.list.append({"host":host,
                                   "port":port,
                                   "usrname":recv_data[0],
@@ -24,8 +24,8 @@ class thread_accept_client(threading.Thread):
                                   "Socket":connect
                                  })
 	            connect.sendall(b'ACK')
-		    else:
-		        connect.sendall(b'NEG')
+		else:
+                    connect.sendall(b'NEG')
         
     def stop(self):
         self._stop_event.set()
