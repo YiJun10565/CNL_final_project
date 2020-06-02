@@ -1,13 +1,15 @@
 import socket
 import threading
-
+import json
 class thread_accept_client(threading.Thread):
     def __init__(self, listen_socket, client_list):
         super(thread_listen_client, self)
         self._stop_event = threding.Event() #For Stoping Thread
         self.socket = listen_socket
         self.list = client_list
-		
+        with open('db.json', 'wr', encoding='utf-8') as f:
+            self.database = json.load(f)
+
     def run(self):
 	    print(u'waiting for connect...')
 	    while(self._stop_event.is_set() == False):
@@ -15,16 +17,16 @@ class thread_accept_client(threading.Thread):
     		connect, (host, port) = self.socket.accept()
     		print(u'the client %s:%s has connected.' % (host, port))
     		recv_data = self.socket.recv(1024)
-    		recv_data = recv_data.decode('utf-8').split(',')
-		if(): #Check if user is valid
-        	    self.list.append({"host":host,
+                recv_data = recv_data.decode('utf-8').split(',')
+                if self.database[recv_data[0]] is recv_data[1]: #Check if user is valid
+                    self.list.append({"host":host,
                                   "port":port,
                                   "usrname":recv_data[0],
                                   "passwd":recv_data[1],
                                   "Socket":connect
                                  })
 	            connect.sendall(b'ACK')
-		else:
+	        else:
                     connect.sendall(b'NEG')
         
     def stop(self):
@@ -65,7 +67,7 @@ if "__name__" == "__main__":
             print(b'the client say:' + data)
      
 	 
-	 listening.stop()
-	 listening.join()
+	listening.stop()
+	listening.join()
 	 
-     server.close()
+    server.close()
