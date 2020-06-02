@@ -16,12 +16,16 @@ class thread_accept_client(threading.Thread):
     		print(u'the client %s:%s has connected.' % (host, port))
     		recv_data = self.socket.recv(1024)
     		recv_data = recv_data.decode('utf-8').split(',')
-    		self.list.append({"host":host,
-                              "port":port,
-                              "usrname":recv_data[0],
-                              "passwd":recv_data[1],
-                              "Socket":connect
-                             })
+			if(): #Check if user is valid
+        		self.list.append({"host":host,
+                                  "port":port,
+                                  "usrname":recv_data[0],
+                                  "passwd":recv_data[1],
+                                  "Socket":connect
+                                 })
+		   else:
+		       connect.sendall(b'Username or password isn\'t correct.')
+			   connect.close()
         
     def stop(self):
         self._stop_event.set()
@@ -60,8 +64,8 @@ if "__name__" == "__main__":
             print(b'the client has quit.')
             break
         else:
-             connect.sendall(b'your words has received.')
-             print(b'the client say:' + data)
+            connect.sendall(b'your words has received.')
+            print(b'the client say:' + data)
      
 	 
 	 listening.stop()
