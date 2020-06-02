@@ -27,8 +27,14 @@ class thread_accept_client(threading.Thread):
                     self.read_list.append(connect)
                 else:       
                     recv_data = s.recv(1024)
+                
+                    print(recv_data,flush=True)
                     recv_data = recv_data.decode('utf-8').split(',')
-                    if self.database[recv_data[0]] is recv_data[1]: #Check if user is valid
+                    recv_data[1] = recv_data[1].replace("\n","")
+                    print(self.database[recv_data[0]],'456',flush=True)
+                    
+                    print(len(recv_data[1]),flush=True)
+                    if self.database[recv_data[0]] == recv_data[1]: #Check if user is valid
                         self.list.append({"host":host,
                                           "port":port,
                                           "usrname":recv_data[0],
@@ -47,7 +53,7 @@ if __name__ == "__main__":
     
     #=====Create Socket to listen=====
     IP = '127.0.0.1'
-    Port = 23456
+    Port = 23459
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((IP, Port))
     server.listen(5)
@@ -78,7 +84,7 @@ if __name__ == "__main__":
             server.sendall(b'your words has received.')
             print(b'the client say:' + data)
      
-    '''
+'''
     #listening.stop()
     listening.join()
      
