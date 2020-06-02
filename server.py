@@ -48,6 +48,43 @@ class thread_accept_client(threading.Thread):
     def stop(self):
         self._stop_event.set()
 
+class thread_running_client(threading.Thread):
+    global broadcast_msg
+    def __init__(self, client_info, mic_lock, client_list):
+        self.info = client_info
+        self.IP = client_info["host"]
+        self.port = client_info["port"]
+        self.username = client_info["usrname"]
+        self.password = client_info["passwrd"]
+        self.socket = client_info["Socket"]
+        self._stop_event = threading.Event() #For Stoping Thread
+        self.lock = mic_lock
+        self.list = client_list
+
+    def run(self):
+        while not self._stop_event.is_set():
+            data = self.socket.recv(1024)
+            if(data == b'quit'):
+                self.socket.close()
+                self.list.remove(self.info)
+                self._stop_event.set()
+            elif(data == b'REQ'):
+                if(self.lock.acquire(blocking == False)):
+                    self.socket.sendall(b'MIC_ACK')
+                else:
+                    self.socket.sendall(b'MIC_REJ')
+                    continue
+            using = 1
+            while using:
+                data = self.socket.recv(1024) #Chunk Size
+                if(data == b'END'):
+                    self.lock.release()
+                    using = 0
+                else:
+                    broadcast_msg = data
+
+    def stop(self):
+        self._stop_event.set()
 
 if __name__ == "__main__":
     
@@ -73,7 +110,8 @@ if __name__ == "__main__":
     listening = thread_accept_client(server, client_list)
     listening.start()
     
-    
+    mic_lock = threading.Lock()
+    global broadcast_msg = ""
     '''
     while True:
         data = server.recv(1024)
