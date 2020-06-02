@@ -4,24 +4,24 @@ import threading
 class thread_accept_client(threading.Thread):
     def __init__(self, listen_socket, client_list):
         super(thread_listen_client, self)
-		self._stop_event = threding.Event() #For Stoping Thread
+        self._stop_event = threding.Event() #For Stoping Thread
         self.socket = listen_socket
         self.list = client_list
 		
     def run(self):
 	    print(u'waiting for connect...')
-		while(self._stop_event.is_set() == False):
-		    #Todo: client info maintain
+	    while(self._stop_event.is_set() == False):
+    		#Todo: client info maintain
     		connect, (host, port) = self.socket.accept()
-            print(u'the client %s:%s has connected.' % (host, port))
-			recv_data = self.socket.recv(1024)
-			recv_data = recv_data.decode('utf-8').split(',')
-			self.list.append({"host":host,
+    		print(u'the client %s:%s has connected.' % (host, port))
+    		recv_data = self.socket.recv(1024)
+    		recv_data = recv_data.decode('utf-8').split(',')
+    		self.list.append({"host":host,
                               "port":port,
-		                      "usrname":recv_data[0],
-			                  "passwd":recv_data[1],
-		                	  "Socket":connect
-			                 })
+                              "usrname":recv_data[0],
+                              "passwd":recv_data[1],
+                              "Socket":connect
+                             })
         
     def stop(self):
         self._stop_event.set()
@@ -36,15 +36,15 @@ if "__name__" == "__main__":
     server.listen(5)
 
     #======client data======== (Todo)
-	client_list = list()
-	'''
-	Format: [{"host":"140.112.20.35",
+    client_list = list()
+    '''
+    Format: [{"host":"140.112.20.35",
               "port":"1234",
-			  "usrname":"Bob",
-			  "passwd":"abc123",
-			  "Socket":connect}
-			]
-	'''
+              "usrname":"Bob",
+              "passwd":"abc123",
+              "Socket":connect}
+            ]
+    '''
 	
     #======Start Listening======
     listening = thread_accept_client(server, client_list)
