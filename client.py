@@ -31,17 +31,17 @@ if "__name__" == "__main__":
 	confirm = 0
 	while(not confirm):
 	    #===========Loggin============
-        Username = input('Please enter your name: ')
-        Password = input('Password: ')
+            Username = input('Please enter your name: ')
+            Password = input('Password: ')
 	    data = Username + ',' + Password + '\n'
 	    data = data.encode('utf-8')
-        client.sendall(data)
-		data = client.recv(1024)
-		if(data == b'ACK'):
-		    print("Loggin Success!!")
-			confirm = 1
-		else:
-		    print("Username or password isn\'t correct.")
+            client.sendall(data)
+	    data = client.recv(1024)
+	    if(data == b'ACK'):
+	        print("Loggin Success!!")
+		confirm = 1
+	    else:
+	        print("Username or password isn\'t correct.")
     
     #======Create Thread to Recieve msg======
     recv_sound = thread_recv_sound(client)
