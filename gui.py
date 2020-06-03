@@ -3,6 +3,7 @@ from tkinter import ttk
 import tkinter.messagebox
 import tkinter.scrolledtext as tst
 import tkinter.filedialog as fd
+from PIL import ImageTk, Image
 import recorder
 import threading
 import pyaudio
@@ -27,28 +28,42 @@ class GUI(tk.Tk):
 class StartPage(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        tk.Label(self, text="CNL", font=('Helvetica', 48, "bold")).pack(side="top", fill="x", ipady=10)
-        tk.Label(self, text="Walkie-Talkie", font=('Helvetica', 24, "bold")).pack(side="top", fill="x", ipady=10)
-        tk.Label(self, text="Username", font=('Helvetica', 12)).pack()
-        tk.Entry(self).pack(side = 'left')
-        self.login_button = tk.Button(self, text="login", command=lambda: master.switch_frame(MainPage))
-        self.login_button.pack(side = 'right')
+        self.bg_color = 'DeepSkyBlue2'
+        master.configure(bg = self.bg_color)
+        self.configure(bg = self.bg_color)      
+        tk.Label(self, bg = self.bg_color).grid(row = 0, column = 0, columnspan=4, rowspan = 1, pady = 5)
+        tk.Label(self, text="CNL", font=('Helvetica', 48, "bold"), bg = self.bg_color).grid(row = 1, column = 0, columnspan=4, rowspan = 3)
+        tk.Label(self, text="Walkie-Talkie", font=('Helvetica', 24, "bold"), bg = self.bg_color).grid(row = 4, columnspan=4, rowspan = 2) 
+        tk.Label(self, bg = self.bg_color).grid(row = 6, column = 0, columnspan=4, rowspan = 1, pady = 0)       
+        tk.Label(self, text="--- Username ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 8, columnspan=4, pady = 5)
+        tk.Entry(self).grid(row = 10, columnspan=4, pady = 5)
+        tk.Label(self, bg = self.bg_color).grid(row = 11, column = 0, columnspan=4, rowspan = 2)
+        tk.Label(self, text="--- Password ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 12, columnspan=4, pady = 5)
+        tk.Entry(self).grid(row = 14, columnspan=4, pady = 5)
+        tk.Label(self, bg = self.bg_color).grid(row = 15, column = 0, columnspan=4, rowspan = 1, pady = 0)
+        tk.Button(self, text="Login", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(MainPage)).grid(row = 16, column = 0, columnspan=4, pady = 10)
+    ### TODO ###
+        tk.Button(self, text="Register", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(MainPage)).grid(row = 17, column = 0, columnspan=4, pady = 5)
+
 
 class MainPage(tk.Frame):
     def __init__(self, master):
+        tk.Frame.__init__(self, master)
         self.running = None
         self.click = False
-        tk.Frame.__init__(self, master)
-        tk.Frame.configure(self, bg='blue')
-        tk.Label(self, text="Page one", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5)
-        self.record_button = tk.Button(self, text="record!")
-        self.record_button.pack()
+        self.bg_color = 'DeepSkyBlue2'
+        self.configure(bg = self.bg_color) 
+        tk.Label(self, bg = self.bg_color).grid(row = 0, rowspan = 1, pady = 5)
+        tk.Label(self, text="Walkie-Talkie", font=('Helvetica', 24, "bold"), bg = self.bg_color).grid(row = 1, pady = 5)
+        self.photo = ImageTk.PhotoImage(file = "record.png")
+        self.record_button = tk.Button(self, text="record!", image = self.photo, bg = self.bg_color)
+        self.record_button.grid(row = 2, pady = 5)
         
         
         self.record_button.bind('<ButtonPress-1>', lambda event: self.create_recording_thread())#self.start_recording())
         self.record_button.bind('<ButtonRelease-1>', lambda event: self.stop_recording())
         self.login_button = tk.Button(self, text="logout", command=lambda: master.switch_frame(StartPage))
-        self.login_button.pack()
+        self.login_button.grid(row = 3, pady = 5)
     def create_recording_thread(self):
         self.thread_recording = threading.Thread(target = self.start_recording)
         self.thread_recording.setDaemon(True)
@@ -60,7 +75,6 @@ class MainPage(tk.Frame):
         sample_format = pyaudio.paInt16  # 16 bits per sample
         channels = 2
         fs = 44100  # Record at 44100 samples per second
-        seconds = 0.1
         # filename = "record/output.wav"
 
         p = pyaudio.PyAudio()  # Create an interface to PortAudio
