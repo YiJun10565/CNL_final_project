@@ -3,12 +3,23 @@ import threading
 import json
 import select
 
+
+class Client_info():
+    def __init__(self, connect, host, port):
+        self.connect = connect
+        self.host = host
+        self.port = port
+        self.usrname = ""
+        self.passwd  = ""
+        self.state = "Initial State"
+
 class thread_accept_client(threading.Thread):
+    global client_list
     def __init__(self, listen_socket, client_list): 
         threading.Thread.__init__(self)
         self._stop_event = threading.Event() #For Stoping Thread
         self.socket = listen_socket
-        self.list = client_list
+        
         self.read_list = [listen_socket]
         with open('db.json', 'r+', encoding='utf-8') as f:
             self.database = json.load(f)
@@ -24,16 +35,20 @@ class thread_accept_client(threading.Thread):
                      #Todo: client info maintain
                     connect, (host, port) = self.socket.accept()
                     print(u'the client %s:%s has connected.' % (host, port))
-                    self.read_list.append(connect)
-                else:       
+                    
+                    new_client_info = client(connect, host, port)
+                    client_list.append(new_client_info)
+                    connect.sendall(b'Initial:Welcome')
+                    thread_running_client(new_client_info)
+                else:  
+
                     recv_data = s.recv(1024)
                 
                     print(recv_data,flush=True)
                     recv_data = recv_data.decode('utf-8').split(',')
-                    recv_data[1] = recv_data[1].replace("\n","")
+                    #recv_data[1] = recv_data[1].replace("\n","")
                     print(self.database[recv_data[0]],'456',flush=True)
                     
-                    print(len(recv_data[1]),flush=True)
                     if self.database[recv_data[0]] == recv_data[1]: #Check if user is valid
                         self.list.append({"host":host,
                                           "port":port,
@@ -48,6 +63,83 @@ class thread_accept_client(threading.Thread):
     def stop(self):
         self._stop_event.set()
 
+class thread_running_client(threading.Thread):
+    global broadcast_msg
+    global mic_lock
+    global client_list
+    global States
+    def __init__(self, client_info):
+        self.info = client_info
+        self._stop_event = threading.Event() #For Stoping Thread
+        
+        # below states should be made in a global variable(but no time QQ)
+        self.initial_state = "Initial"
+        self.login_state = "Login"
+        self.sign_up_state = "Sign up"
+        self.wait_for_talk_state = "wait for talk"
+        self.talking_state = "Talking"
+        
+        with open('db.json', 'r+', encoding='utf-8') as f:
+            self.database = json.load(f)
+            for x in self.database:
+                print(x, self.database[x])
+    
+    def run(self):
+        while not self._stop_event.is_set():
+            raw_data = self.info.connect.recv(1024)
+            data = raw_data.decode('utf-8')
+            print(data)
+            if self.info.state == self.initial_state:
+                if data == "login":
+                    send_data = self.login_state + ":" + "Ent"
+                    self.info.state = self.login_state
+                elif data == "sign up":
+                    send_data = self.sign_up_state + ":" + "Ent"
+                    self.info.state = self.sign_up_state
+                elif data == "quit":
+                    self.socket.close()
+                    self.list.remove(self.info)
+                    self._stop_event.set()
+                    return
+                else:
+                    send_data = self.info.stage + ":" + "NoImpl"
+                    print("not implement")
+                    
+            elif self.info.state == self.login_state :
+                usr,pwd = data.split(",")
+                if usr not in self.database or self.database[usr] != pwd:
+                    send_data = self.login_state + ":"
+                else:
+                    send_data = self.waiting_for_talk_state + ":" + "Ent"
+                    self.info.state = self.waiting_for_talk_state
+
+            elif self.info.state == self.sign_up_state:
+                usr, pwd = data.split(",")
+                if usr in self.database:
+                    send_data = self.sign_up_state + ":" + "Rej"
+                else:
+                    send_data = self.wait_for_talk_state + ":" + "Ent"
+                    self.info.state = self.waiting_for_talk_state
+            elif self.info.state == self.waiting_for_talk_state:
+                if data == "Req":
+                    if self.lock.acquire(blocking == False):
+                        send_data =  self.talking_state + ":" + "Mic_ACK"
+                        self.info.state = self.talking_state
+                    else:
+                        send_data =  self.waiting_for_talk_state + ":" + "Mic_REJ"
+            elif self.talking_state:
+                if data == "quit":
+                    send_data = self.waiting_for_talk_state + ":" + "Ent"
+                    self.info.state = self.waiting_for_talk_state 
+                else:
+                    for client in client_list:
+                        if client == self.info:
+                            continue
+                        client.socket.sendall(raw_data)
+
+
+    def stop(self):
+        self._stop_event.set()
 
 if __name__ == "__main__":
     
@@ -73,7 +165,9 @@ if __name__ == "__main__":
     listening = thread_accept_client(server, client_list)
     listening.start()
     
-    
+    mic_lock = threading.Lock()
+    global broadcast_msg 
+    broadcast_msg = ""
     '''
     while True:
         data = server.recv(1024)

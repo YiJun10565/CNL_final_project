@@ -1,10 +1,11 @@
 import socket
 import threading
+import getpass
 
 class thread_recv_sound(threading.Thread):
     def __init__(self, client_socket):
-        super(thread_recv_sound, self).__init__
-        self._stop_event = threding.Event() #For Stopping Thread
+        threading.Thread.__init__(self)
+        self._stop_event = threading.Event() #For Stopping Thread
         self.socket = client_socket
 
     def run(self):
@@ -26,35 +27,90 @@ if __name__ == "__main__":
     port = 9999
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((IP, port)) #Server IP & Port
-    
-    #====Check username & password====
-    confirm = 0
-    while not confirm:
-        print('Now Login')
-       #===========Loggin============
-        Username = input('Please enter your name: ')
-        Password = input('Password: ')
-        data = Username + ',' + Password + '\n'
-        data = data.encode('utf-8')
-        client.sendall(data)
+    # Check operation
+    operation = input("Please input the operation:('sign up'/'login')")
+    if operation == "sign up":
+        client.sendall("sign up".encode("utf-8"))
         data = client.recv(1024)
-        if(data == b'ACK'):
-            print("Loggin Success!!")
-            confirm = 1
-        else:
-            print("Username or password isn't correct.")
-    
-    #======Create Thread to Recieve msg======
-    recv_sound = thread_recv_sound(client)
-    recv_sound.start()
+        '''
+        while data.decode('utf-8') != 'sign up ACK':
+            op = input("Connection error, do you want to sign up again?(y/n)")
+            if op == 'y':
+                client.sendall("Sign up".encode("utf-8"))
+                data = client.recv(1024)
+            else:
+                client.sendall(b'quit')
+                client.close()
+                return
+        '''
+        ####toooooo dooooo
+        if data.decode('utf-8') == 'To sign up ACK':
+            confirm = 0
+            while not confirm:
+                print('Now sign up')
+               #===========Loggin============
+                Username = input('Please enter your name: ')
+                Password = getpass.getpass('Password: ')
+                CheckPassword = getpass.getpass('Password again: ')
+                while Password != CheckPassword:
+                    print("Passwords are not same, please enter again.")
+                    Password = getpass.getpass('Password: ')
+                    CheckPassword = getpass.getpass('Password again: ')
+                    
+                data = Username + ',' + Password
+                data = data.encode('utf-8')
+                client.sendall(data)
+                data = client.recv(1024)
+                ##TODO 
+                if(data == b'sign up ACK'):
+                    print("Sign up successfully!!")
+                    confirm = 1
+                else:
+                    print("The account has been used.")    
 
-    while True: #Todo: check authorization to talk
-        data = input() #Change this to vocal
-        data = data.encode('utf-8')
-        client.sendall(data)
+    elif operation == "login":
+        client.sendall("login".encode("utf-8"))
+        data = client.recv(1024)
+        #====Check username & password====
+        confirm = 0
+        while not confirm:
+            print('Now Login')
+           #===========Loggin============
+            Username = input('Please enter your name: ')
+            Password = input('Password: ')
+            data = Username + ',' + Password + '\n'
+            data = data.encode('utf-8')
+            client.sendall(data)
+            data = client.recv(1024)
+           ############################################
+            if(data == b'ACK'): ## TODO
+                print("Loggin Success!!")
+                confirm = 1
+            else:
+                print("Username or password isn't correct.")
+        ##############################################
+        #======Create Thread to Recieve msg======
+        recv_sound = thread_recv_sound(client)
+        recv_sound.start()
 
-    recv_sound.stop()
-    recv_sound.join()
+        while True:
+            key = "" #Input Key
+            if(key == ''): #Client quit
+                break
+            elif(key == ''): #Ask for Mic
+                client.sendall(b'REQ')
+                data = client.recv(1024)
+                if(data == b'MIC_ACK'):
+                    data = input()#Change this to vocal
+                    data = data.encode('utf-8')
+                    clent.sendall(data)
+                else(data == b'MIC_REJ'):
+                    print('Microphone Reject') #Wait a second
+                    sleep(1)
+
+
+        recv_sound.stop()
+        recv_sound.join()
 
     client.sendall(b'quit')
     client.close()
