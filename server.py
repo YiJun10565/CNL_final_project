@@ -40,6 +40,7 @@ class thread_accept_client(threading.Thread):
                     client_list.append(new_client_info)
                     connect.sendall(b'Initial:Welcome')
                     thread_running_client(new_client_info)
+                '''
                 else:  
 
                     recv_data = s.recv(1024)
@@ -59,7 +60,7 @@ class thread_accept_client(threading.Thread):
                         connect.sendall(b'ACK')
                     else:
                         connect.sendall(b'NEG')
-            
+                '''
     def stop(self):
         self._stop_event.set()
 
@@ -90,12 +91,12 @@ class thread_running_client(threading.Thread):
             data = raw_data.decode('utf-8')
             print(data)
             if self.info.state == self.initial_state:
-                if data == "login":
-                    send_data = self.login_state + ":" + "Ent"
-                    self.info.state = self.login_state
-                elif data == "sign up":
+                if data == "sign up":
                     send_data = self.sign_up_state + ":" + "Ent"
                     self.info.state = self.sign_up_state
+                elif data == "login":
+                    send_data = self.login_state + ":" + "Ent"
+                    self.info.state = self.login_state
                 elif data == "quit":
                     self.socket.close()
                     self.list.remove(self.info)
@@ -158,6 +159,9 @@ if __name__ == "__main__":
     #======client data======== (Todo)
     client_list = list()
     '''
+    O)
+    Format: [client_info_1 , client_info_2, ...]
+    X)
     Format: [{"host":"140.112.20.35",
               "port":"1234",
               "usrname":"Bob",
