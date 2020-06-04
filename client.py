@@ -1,6 +1,8 @@
 import socket
 import threading
 import getpass
+import argparse
+
 
 class thread_recv_sound(threading.Thread):
     def __init__(self, client_socket):
@@ -22,9 +24,15 @@ class thread_recv_sound(threading.Thread):
 
 
 if __name__ == "__main__":
+    #====== arg parsing =========
+    parser = argparse.ArgumentParser()
+    parser.add_argument("IP", type=str, help="IP of the server")
+    parser.add_argument("port", type=int, help="port of the IP")
+    args = parser.parse_args()
+    print(args.IP, args.port)
     #======Connect to Server=====
-    IP = '127.0.0.1'
-    port = 9999
+    IP = args.IP
+    port = args.port
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((IP, port)) #Server IP & Port
     # Check operation
@@ -43,7 +51,7 @@ if __name__ == "__main__":
                 client.close()
                 return
         '''
-        ####toooooo dooooo
+        # TODO
         if data.decode('utf-8') == 'To sign up ACK':
             confirm = 0
             while not confirm:
@@ -90,6 +98,7 @@ if __name__ == "__main__":
                 print("Username or password isn't correct.")
         ##############################################
         #======Create Thread to Recieve msg======
+
         recv_sound = thread_recv_sound(client)
         recv_sound.start()
 
@@ -100,11 +109,11 @@ if __name__ == "__main__":
             elif(key == ''): #Ask for Mic
                 client.sendall(b'REQ')
                 data = client.recv(1024)
-                if(data == b'MIC_ACK'):
+                if (data == b'MIC_ACK'):
                     data = input()#Change this to vocal
                     data = data.encode('utf-8')
                     clent.sendall(data)
-                else(data == b'MIC_REJ'):
+                elif (data == b'MIC_REJ'):
                     print('Microphone Reject') #Wait a second
                     sleep(1)
 
@@ -114,3 +123,4 @@ if __name__ == "__main__":
 
     client.sendall(b'quit')
     client.close()
+

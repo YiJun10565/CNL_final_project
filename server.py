@@ -2,7 +2,7 @@ import socket
 import threading
 import json
 import select
-
+import argparse
 
 class Client_info():
     def __init__(self, connect, host, port):
@@ -142,10 +142,15 @@ class thread_running_client(threading.Thread):
         self._stop_event.set()
 
 if __name__ == "__main__":
-    
+    #===== arg parsing ===============
+    parser = argparse.ArgumentParser()
+    parser.add_argument("IP", help="The IP the server be")
+    parser.add_argument("port", type=int, help="port of the IP")
+    args = parser.parse_args()
+    print(args.IP, args.port)
     #=====Create Socket to listen=====
-    IP = '127.0.0.1'
-    Port = 23459
+    IP = args.IP
+    Port = args.port
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((IP, Port))
     server.listen(5)
