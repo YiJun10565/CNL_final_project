@@ -2,6 +2,7 @@ import socket
 import threading
 import getpass
 import argparse
+from Variables import States
 
 
 class thread_recv_sound(threading.Thread):
@@ -23,15 +24,15 @@ class thread_recv_sound(threading.Thread):
         self._stop_event.set()
 
 def Sign_up(client):
-    client.sendall("sign up".encode("utf-8"))
+    client.sendall(States.sign_up.encode("utf-8"))
     recv_raw_data = client.recv(1024)
     recv_data = recv_raw_data.decode("utf-8")
     state, msg = recv_data.split(":")
-    if state != "Sign up":
-        print("Somethings went wrong while sign up")
-        return
+#    if state != States.sign_up:
+#        print("Somethings went wrong while sign up")
+#        return
     
-    print('Now sign up:')
+    print(recv_data, 'Now sign up:')
     while True:
        #===========Loggin============
         Username = input('Please enter your name: ')
@@ -49,30 +50,31 @@ def Sign_up(client):
         recv_raw_data = client.recv(1024)
         recv_data = recv_data.decode("utf-8")
         state, msg = recv_data.split(":")
-        if state == "wait for talk" and msg == 'Ent' :
+        if state == States.waiting_for_talk:
             print("Sign up successfully!!")
             break
-        elif state == "Sign up" and msg == "Rej":
+        elif state == States.sign_up:
             print("The account has been used.")    
 
 def Login(client):
-    client.sendall("login".encode("utf-8"))
+    client.sendall(States.login.encode("utf-8"))
     
     recv_raw_data = client.recv(1024)
     recv_data = recv_raw_data.decode("utf-8")
-    print('Now Login')
+    print(recv_data, 'Now login:')
     while True:
        #===========Loggin============
         Username = input('Please enter your username: ')
         Password = input('Please enter your password: ')
-        send_data = Username + ',' + Password + '\n'
+        send_data = Username + ',' + Password
         send_raw_data = send_data.encode('utf-8')
         client.sendall(send_raw_data)
         recv_raw_data = client.recv(1024)
         recv_data = recv_raw_data.decode("utf-8")
+        print(send_data, recv_data)
         state, msg = recv_data.split(":")
        ############################################
-        if state == "wait for talk" and msg == "Ent":
+        if state == States.waiting_for_talk:
             print("Loggin Success!!")
             break
         else:
@@ -94,21 +96,30 @@ if __name__ == "__main__":
     client.connect((IP, port)) #Server IP & Port
     # Before login
     # Check operation
+    state = States.initial
     while True:
-        operation = input("Please input the operation:('sign up'/'login'/'quit')")
-        if operation == "quit":
-            break
-        elif operation == "sign up":
-            Sign_up(client)
+        #TODO: make the initial operation into a function and make everything into this loop
+        if state == States.initial:
 
-        elif operation == "login":
-            Login(client)
-            ##############################################
-            #======Create Thread to Recieve msg======
-        else:
-            print("Unknown command")
+            operation = input("Please input the operation:('sign up'/'login'/'quit')")
+            if operation == "quit":
+                print("Goodbye~")
+                break
+            elif operation == "sign up":
+                Sign_up(client)
+    
+            elif operation == "login":
+                Login(client)
+            else:
+                print("Unknown command")
 
+
+    print("Login or Sign up successfully")
+    '''
+    ##############################################
+    #======Create Thread to Recieve msg======
     # start recording
+    # Maybe this line can put in the Sign_up or Login
     recv_sound = thread_recv_sound(client)
     recv_sound.start()
 
@@ -121,15 +132,16 @@ if __name__ == "__main__":
             data = client.recv(1024)
             if (data == b'MIC_ACK'):
                 data = input()#Change this to vocal
-                    data = data.encode('utf-8')
-                    clent.sendall(data)
-                elif (data == b'MIC_REJ'):
-                    print('Microphone Reject') #Wait a second
-                    sleep(1)
+                data = data.encode('utf-8')
+                clent.sendall(data)
+            elif (data == b'MIC_REJ'):
+                print('Microphone Reject') #Wait a second
+                sleep(1)
 
     recv_sound.stop()
     recv_sound.join()
-
+    
     client.sendall(b'quit')
+    '''
     client.close()
 

@@ -3,15 +3,16 @@ import threading
 import json
 import select
 import argparse
+from Variables import States
 
 class Client_info():
     def __init__(self, connect, host, port):
         self.connect = connect
         self.host = host
         self.port = port
-        self.usrname = ""
-        self.passwd  = ""
-        self.state = "Initial State"
+        self.username = ""
+        self.password  = ""
+        self.state = States.initial
 
 class thread_accept_client(threading.Thread):
     global client_list
@@ -36,9 +37,11 @@ class thread_accept_client(threading.Thread):
                     connect, (host, port) = self.socket.accept()
                     print(u'the client %s:%s has connected.' % (host, port))
                     
-                    new_client_info = client(connect, host, port)
+                    new_client_info = Client_info(connect, host, port)
                     client_list.append(new_client_info)
-                    connect.sendall(b'Initial:Welcome')
+                    send_data = States.initial +  ":" + "Welcome"
+                    send_raw_data = send_data.encode("utf-8")
+                    connect.sendall(send_raw_data)
                     thread_running_client(new_client_info)
                 '''
                 else:  
@@ -73,13 +76,6 @@ class thread_running_client(threading.Thread):
         self.info = client_info
         self._stop_event = threading.Event() #For Stoping Thread
         
-        # below states should be made in a global variable(but no time QQ)
-        self.initial_state = "Initial"
-        self.login_state = "Login"
-        self.sign_up_state = "Sign up"
-        self.wait_for_talk_state = "wait for talk"
-        self.talking_state = "Talking"
-        
         with open('db.json', 'r+', encoding='utf-8') as f:
             self.database = json.load(f)
             for x in self.database:
@@ -90,13 +86,13 @@ class thread_running_client(threading.Thread):
             raw_data = self.info.connect.recv(1024)
             data = raw_data.decode('utf-8')
             print(data)
-            if self.info.state == self.initial_state:
+            if self.info.state == State.initial:
                 if data == "sign up":
-                    send_data = self.sign_up_state + ":" + "Ent"
-                    self.info.state = self.sign_up_state
+                    self.info.state = State.sign_up
+                    send_data = self.info.state + ":" + "Ent"
                 elif data == "login":
-                    send_data = self.login_state + ":" + "Ent"
-                    self.info.state = self.login_state
+                    self.info.state = State.login
+                    send_data = self.info.state + ":" + "Ent"
                 elif data == "quit":
                     self.socket.close()
                     self.list.remove(self.info)
@@ -105,39 +101,63 @@ class thread_running_client(threading.Thread):
                 else:
                     send_data = self.info.stage + ":" + "NoImpl"
                     print("not implement")
+                send_raw_data = send_data.encode("utf-8")
+                client.info.connect.sendall(send_raw_data)
                     
-            elif self.info.state == self.login_state :
+            elif self.info.state == State.login :
                 usr,pwd = data.split(",")
                 if usr not in self.database or self.database[usr] != pwd:
-                    send_data = self.login_state + ":"
+                    send_data = self.info.state + ":" + "Wrong"
                 else:
-                    send_data = self.waiting_for_talk_state + ":" + "Ent"
-                    self.info.state = self.waiting_for_talk_state
+                    self.info.state = State.waiting_for_talk
+                    send_data = State.info.state + ":" + "Ent"
+                    self.info.username = usr
+                    self.info.password = pwd
+                send_raw_data = send_data.encode("utf-8")
+                client.info.connect.sendall(send_raw_data)
 
-            elif self.info.state == self.sign_up_state:
+            elif self.info.state == State.sign_up:
                 usr, pwd = data.split(",")
                 if usr in self.database:
-                    send_data = self.sign_up_state + ":" + "Rej"
+                    send_data = self.info.state + ":" + "Rej"
                 else:
-                    send_data = self.wait_for_talk_state + ":" + "Ent"
-                    self.info.state = self.waiting_for_talk_state
-            elif self.info.state == self.waiting_for_talk_state:
+                    self.info.state = State.waiting_for_talk
+                    send_data = self.info.state + ":" + "Ent"
+                    self.info.username = usr
+                    self.info.password = pwd
+                    self.database[usr] = pwd
+                    with open('db.json', 'w', encoding='utf-8') as f:
+                        json.dumps(self.database)
+                        for x in self.database:
+                            print(x, self.database[x])
+                    self.database
+                send_raw_data = send_data.encode("utf-8")
+                client.info.connect.sendall(send_raw_data)
+
+            elif self.info.state == State.waiting_for_talk:
                 if data == "Req":
                     if self.lock.acquire(blocking == False):
-                        send_data =  self.talking_state + ":" + "Mic_ACK"
-                        self.info.state = self.talking_state
+                        self.info.state = State.talking
+                        send_data =  self.info.state + ":" + "Mic_ACK"
                     else:
-                        send_data =  self.waiting_for_talk_state + ":" + "Mic_REJ"
-            elif self.talking_state:
+                        send_data =  self.info.state + ":" + "Mic_REJ"
+                elif data == "quit":
+                    self.info.state = State.initial
+                    send_data = self.info.state + ":" + "Ent"
+                send_raw_data = send_data.encode("utf-8")
+                client.info.connect.sendall(send_raw_data)
+
+            elif self.info.state == State.talking:
                 if data == "quit":
-                    send_data = self.waiting_for_talk_state + ":" + "Ent"
-                    self.info.state = self.waiting_for_talk_state 
+                    self.info.state = State.waiting_for_talk
+                    send_data = self.info.state + ":" + "Ent"
+                    send_raw_data = send_data.encode("utf-8")
+                    client.info.connect.sendall(send_raw_data)
                 else:
                     for client in client_list:
                         if client == self.info:
                             continue
                         client.socket.sendall(raw_data)
-
 
     def stop(self):
         self._stop_event.set()
