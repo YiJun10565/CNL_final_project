@@ -3,8 +3,9 @@ import threading
 import json
 import select
 import argparse
-from Variables import States
+from Variables import States, Client_info
 
+'''
 class Client_info():
     def __init__(self, connect, host, port):
         self.connect = connect
@@ -13,7 +14,7 @@ class Client_info():
         self.username = ""
         self.password  = ""
         self.state = States.initial
-
+'''
 class thread_accept_client(threading.Thread):
     global client_list
     def __init__(self, listen_socket, client_list): 
@@ -42,7 +43,8 @@ class thread_accept_client(threading.Thread):
                     send_data = States.initial +  ":" + "Welcome"
                     send_raw_data = send_data.encode("utf-8")
                     connect.sendall(send_raw_data)
-                    thread_running_client(new_client_info)
+                    running = thread_running_client(new_client_info)
+                    running.start()
                 '''
                 else:  
 
@@ -71,7 +73,7 @@ class thread_running_client(threading.Thread):
     global broadcast_msg
     global mic_lock
     global client_list
-    global States
+
     def __init__(self, client_info):
         self.info = client_info
         self._stop_event = threading.Event() #For Stoping Thread
@@ -82,15 +84,16 @@ class thread_running_client(threading.Thread):
                 print(x, self.database[x])
     
     def run(self):
+        print("Connection Start", flush=True)
         while not self._stop_event.is_set():
             raw_data = self.info.connect.recv(1024)
             data = raw_data.decode('utf-8')
-            print(data)
+            print("First data", data)
             if self.info.state == State.initial:
-                if data == "sign up":
+                if data == States.sign_up:
                     self.info.state = State.sign_up
                     send_data = self.info.state + ":" + "Ent"
-                elif data == "login":
+                elif data == States.login:
                     self.info.state = State.login
                     send_data = self.info.state + ":" + "Ent"
                 elif data == "quit":
@@ -106,6 +109,7 @@ class thread_running_client(threading.Thread):
                     
             elif self.info.state == State.login :
                 usr,pwd = data.split(",")
+                print( usr, pwd)
                 if usr not in self.database or self.database[usr] != pwd:
                     send_data = self.info.state + ":" + "Wrong"
                 else:
@@ -118,6 +122,7 @@ class thread_running_client(threading.Thread):
 
             elif self.info.state == State.sign_up:
                 usr, pwd = data.split(",")
+                print( usr, pwd)
                 if usr in self.database:
                     send_data = self.info.state + ":" + "Rej"
                 else:
@@ -130,7 +135,6 @@ class thread_running_client(threading.Thread):
                         json.dumps(self.database)
                         for x in self.database:
                             print(x, self.database[x])
-                    self.database
                 send_raw_data = send_data.encode("utf-8")
                 client.info.connect.sendall(send_raw_data)
 

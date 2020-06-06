@@ -2,7 +2,7 @@ import socket
 import threading
 import getpass
 import argparse
-from Variables import States
+from Variables import States, Client_info
 
 
 class thread_recv_sound(threading.Thread):
@@ -24,8 +24,11 @@ class thread_recv_sound(threading.Thread):
         self._stop_event.set()
 
 def Sign_up(client):
-    client.sendall(States.sign_up.encode("utf-8"))
-    recv_raw_data = client.recv(1024)
+    client.print_info()
+    send_data = States.sign_up
+    send_raw_data = send_data.encode("utf-8")
+    client.connect.sendall(send_raw_data)
+    recv_raw_data = client.connect.recv(1024)
     recv_data = recv_raw_data.decode("utf-8")
     state, msg = recv_data.split(":")
 #    if state != States.sign_up:
@@ -46,8 +49,8 @@ def Sign_up(client):
             
         send_data = Username + ',' + Password
         send_raw_data = send_data.encode('utf-8')
-        client.sendall(send_raw_data)
-        recv_raw_data = client.recv(1024)
+        client.connect.sendall(send_raw_data)
+        recv_raw_data = client.connect.recv(1024)
         recv_data = recv_data.decode("utf-8")
         state, msg = recv_data.split(":")
         if state == States.waiting_for_talk:
@@ -57,9 +60,12 @@ def Sign_up(client):
             print("The account has been used.")    
 
 def Login(client):
-    client.sendall(States.login.encode("utf-8"))
+    client.print_info()
+    send_data = States.login
+    send_raw_data = send_data.encode("utf-8")
+    client.connect.sendall(send_raw_data)
     
-    recv_raw_data = client.recv(1024)
+    recv_raw_data = client.connect.recv(1024)
     recv_data = recv_raw_data.decode("utf-8")
     print(recv_data, 'Now login:')
     while True:
@@ -68,14 +74,15 @@ def Login(client):
         Password = input('Please enter your password: ')
         send_data = Username + ',' + Password
         send_raw_data = send_data.encode('utf-8')
-        client.sendall(send_raw_data)
-        recv_raw_data = client.recv(1024)
+        print(send_data)
+        client.connect.sendall(send_raw_data)
+        recv_raw_data = client.connect.recv(1024)
         recv_data = recv_raw_data.decode("utf-8")
         print(send_data, recv_data)
         state, msg = recv_data.split(":")
        ############################################
         if state == States.waiting_for_talk:
-            print("Loggin Success!!")
+            print("Login successfully!!")
             break
         else:
             print("Username or password isn't correct.")
@@ -92,18 +99,25 @@ if __name__ == "__main__":
     #======Connect to Server=====
     IP = args.IP
     port = args.port
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((IP, port)) #Server IP & Port
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client = Client_info(connection, IP, port)
+    client.connect.connect((IP, port)) #Server IP & Port
     # Before login
     # Check operation
-    state = States.initial
+    recv_raw_data = client.connect.recv(1024)
+    recv_data = recv_raw_data.decode("utf-8")
+    print("Welcome Data:", recv_data)
+    state = recv_data.split(":")[0]
     while True:
         #TODO: make the initial operation into a function and make everything into this loop
         if state == States.initial:
 
-            operation = input("Please input the operation:('sign up'/'login'/'quit')")
+            operation = input("Please input the operation:('sign up'/'login'/'quit'):")
             if operation == "quit":
                 print("Goodbye~")
+                client.connect.sendall(operation.encode("utf-8"))
+                client.connect.close()
+                client.states = "quit"
                 break
             elif operation == "sign up":
                 Sign_up(client)
@@ -112,9 +126,11 @@ if __name__ == "__main__":
                 Login(client)
             else:
                 print("Unknown command")
+        else:
+            break
 
 
-    print("Login or Sign up successfully")
+    #print("Login or Sign up successfully")
     '''
     ##############################################
     #======Create Thread to Recieve msg======
@@ -143,5 +159,5 @@ if __name__ == "__main__":
     
     client.sendall(b'quit')
     '''
-    client.close()
+    #client.close()
 
