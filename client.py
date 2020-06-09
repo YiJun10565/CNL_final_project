@@ -2,6 +2,7 @@ import socket
 import threading
 import getpass
 import argparse
+import re
 from Variables import States, Client_info
 
 
@@ -41,8 +42,13 @@ def Sign_up(client):
         Username = input('Please enter your name: ')
         Password = getpass.getpass('Password: ')
         CheckPassword = getpass.getpass('Password again: ')
-        while Password != CheckPassword:
-            print("Passwords are not same, please enter again.")
+        while Password != CheckPassword or not re.match("^[A-Za-z0-9_]+$", Username) or not re.match("^[A-Za-z0-9_]+$", Password):
+            if not re.match("^[A-Za-z0-9_]+$", Username) or not re.match("^[A-Za-z0-9_]+$", Password):
+                print("Username or Password contains invalid characters, please enter again.")
+                print("(letters, numbers and underscores only.)")
+                Username = input('Please enter your name: ')
+            else:
+                print("Passwords are not same, please enter again.")
             # maybe we can add some machanism for client who don't want to keep signing up
             Password = getpass.getpass('Password: ')
             CheckPassword = getpass.getpass('Password again: ')
@@ -51,11 +57,11 @@ def Sign_up(client):
         send_raw_data = send_data.encode('utf-8')
         client.connect.sendall(send_raw_data)
         recv_raw_data = client.connect.recv(1024)
-        recv_data = recv_data.decode("utf-8")
+        recv_data = recv_raw_data.decode("utf-8")
         state, msg = recv_data.split(":")
-        if state == States.waiting_for_talk:
+        if state == States.initial:
             print("Sign up successfully!!")
-            break
+            return States.initial
         elif state == States.sign_up:
             print("The account has been used.")    
 
@@ -83,7 +89,7 @@ def Login(client):
        ############################################
         if state == States.waiting_for_talk:
             print("Login successfully!!")
-            break
+            return States.waiting_for_talk
         else:
             print("Username or password isn't correct.")
 
@@ -111,7 +117,6 @@ if __name__ == "__main__":
     while True:
         #TODO: make the initial operation into a function and make everything into this loop
         if state == States.initial:
-
             operation = input("Please input the operation:('sign up'/'login'/'quit'):")
             if operation == "quit":
                 print("Goodbye~")
@@ -120,13 +125,17 @@ if __name__ == "__main__":
                 client.states = "quit"
                 break
             elif operation == "sign up":
-                Sign_up(client)
-    
+                state = Sign_up(client)
             elif operation == "login":
-                Login(client)
+                state = Login(client)
             else:
                 print("Unknown command")
-        else:
+
+        elif state == States.waiting_for_talk:
+            print("Strat to talk")
+            ###########TODO###########
+            #     START TO TALK      #
+            ##########################
             break
 
 
