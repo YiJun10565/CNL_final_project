@@ -132,11 +132,37 @@ if __name__ == "__main__":
                 print("Unknown command")
 
         elif state == States.waiting_for_talk:
+            #TODO: Create another socket to recv msg.#########
+            #recv_sound = thread_recv_sound(client.connect)  #
+            #recv_sound.start()                              #
+            ##################################################
             print("Strat to talk")
-            ###########TODO###########
-            #     START TO TALK      #
-            ##########################
-            break
+            while True:
+                key = input("0 for quit, 1 for talk:") #Change to Input Key
+                if(key == '0'): #Client quit
+                    client.connect.sendall(b'quit')
+                    recv_raw_data = client.connect.recv(1024)
+                    recv_data = recv_raw_data.decode("utf-8")
+                    print(recv_data)
+                    state, msg = recv_data.split(":")
+                    break
+                elif(key == '1'): #Ask for Mic
+                    client.connect.sendall(b'Req')
+                    recv_raw_data = client.connect.recv(1024)
+                    recv_data = recv_raw_data.decode("utf-8")
+                    print(recv_data)
+                    state, msg = recv_data.split(":")
+                    if (msg == 'MIC_ACK'):
+                        for msg in range(10):  #Change this to vocal file
+                            data = input("Talking...... :")
+                            data = data.encode('utf-8')
+                            client.connect.sendall(data)
+                        data = 'quit'
+                        data = data.encode('utf-8')
+                        client.connect.sendall(data)
+                    elif (msg == 'MIC_REJ'):
+                        print('Microphone Reject') #Wait a second
+                        sleep(1)
 
 
     #print("Login or Sign up successfully")

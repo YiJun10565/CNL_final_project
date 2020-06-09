@@ -69,7 +69,6 @@ class thread_accept_client(threading.Thread):
         self._stop_event.set()
 
 class thread_running_client(threading.Thread):
-    global broadcast_msg
     global mic_lock
     global client_list
     global client_database
@@ -135,7 +134,7 @@ class thread_running_client(threading.Thread):
 
             elif self.info.state == States.waiting_for_talk:
                 if data == "Req":
-                    if self.lock.acquire(blocking == False):
+                    if mic_lock.acquire(blocking=False):
                         self.info.state = States.talking
                         send_data =  self.info.state + ":" + "Mic_ACK"
                     else:
@@ -152,11 +151,16 @@ class thread_running_client(threading.Thread):
                     send_data = self.info.state + ":" + "Ent"
                     send_raw_data = send_data.encode("utf-8")
                     self.info.connect.sendall(send_raw_data)
+                    ############TODO################
+                    #    Recv MSG                  #
+                    '''
                 else:
                     for client in client_list:
                         if client == self.info:
                             continue
                         self.socket.sendall(raw_data)
+                    '''
+                    ################################
 
     def stop(self):
         self._stop_event.set()
@@ -180,42 +184,30 @@ if __name__ == "__main__":
     '''
     O)
     Format: [client_info_1 , client_info_2, ...]
-    X)
-    Format: [{"host":"140.112.20.35",
-              "port":"1234",
-              "usrname":"Bob",
-              "passwd":"abc123",
-              "Socket":connect}
-            ]
     '''
+
     global client_database
     with open('db.json', 'r+', encoding='utf-8') as f:
         client_database = json.load(f)
         for x in client_database:
             print(x, client_database[x])
 
+    global mic_lock
+    mic_lock = threading.Lock()
     #======Start Listening======
     listening = thread_accept_client(server, client_list)
     listening.start()
-    
-    mic_lock = threading.Lock()
-    global broadcast_msg 
-    broadcast_msg = ""
-    '''
-    while True:
-        data = server.recv(1024)
-        if data == b'quit' or data == b'':
-            print(b'the client has quit.')
-            break
-        else:
-            server.sendall(b'your words has received.')
-            print(b'the client say:' + data)
-     
-'''
+
+
+    ####TODO: ADD SOME CONTROL TO SERVER ex. STOP ALL Client AND QUIT####
+    #                                                                   #
+    #####################################################################
+
+
     #listening.stop()
     listening.join()
     
-    with open('db.json', 'w', encoding='utf-8') as f:
+    with open('db.json', 'w', encoding='utf-8') as f: #Save New Database
         json.dumps(client_database)
         for x in client_database:
             print(x, client_database)  
