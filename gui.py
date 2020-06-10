@@ -10,6 +10,7 @@ import threading
 import wave
 import argparse
 import client
+import re
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -39,8 +40,8 @@ class StartPage(tk.Frame):
         self.master.configure(bg = self.bg_color)
         self.configure(bg = self.bg_color)  
 
-        tk.Label(self, bg = self.bg_color).grid(row = 0, column = 0, columnspan=4, rowspan = 1, pady = 5)
-        tk.Label(self, text="CNL", font=('Helvetica', 48, "bold"), bg = self.bg_color).grid(row = 1, column = 0, columnspan=4, rowspan = 3)
+        tk.Label(self, bg = self.bg_color).grid(row = 0, column = 0, columnspan=4, rowspan = 1, pady = 2)
+        tk.Label(self, text="CNL", font=('Helvetica', 42, "bold"), bg = self.bg_color).grid(row = 1, column = 0, columnspan=4, rowspan = 2)
         tk.Label(self, text="Walkie-Talkie", font=('Helvetica', 24, "bold"), bg = self.bg_color).grid(row = 4, columnspan=4, rowspan = 2) 
         tk.Label(self, bg = self.bg_color).grid(row = 6, column = 0, columnspan=4, rowspan = 1, pady = 0)       
 
@@ -57,30 +58,123 @@ class StartPage(tk.Frame):
         tk.Entry(self, textvariable=self.password).grid(row = 14, columnspan=4, pady = 5)
 
 
-        tk.Label(self, bg = self.bg_color).grid(row = 15, column = 0, columnspan=4, rowspan = 1, pady = 0)
+        tk.Label(self, bg = self.bg_color).grid(row = 15, column = 0, columnspan=4, rowspan = 1, pady = 5)
 
         # login
         tk.Button(self, text="Login", font=('Helvetica', 12, "bold"), width = 16, command=self.login).grid(row = 16, column = 0, columnspan=4, pady = 10)
 
         # reigster
-    ### TODO ###
-        tk.Button(self, text="Register", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(MainPage)).grid(row = 17, column = 0, columnspan=4, pady = 5)
+        tk.Button(self, text="Register", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(RegisterPage)).grid(row = 17, column = 0, columnspan=4, pady = 5)
 
     def login(self):
         usrname = self.username.get()
         passwd = self.password.get()
         print("self.username.get():", usrname)
         print("self.password.get():", passwd)
-        if client.Login(self.master.client, usrname, passwd):
-            self.master.switch_frame(MainPage)
-        else:
+        if(not re.match("^[A-Za-z0-9_]+$", usrname) or not re.match("^[A-Za-z0-9_]+$", passwd)):
             popup = tk.Tk()
-            popup.wm_title("!")
-            label = ttk.Label(popup, text="Wrong Username or Password", font=('Helvetica'))
-            label.pack(side="top", fill="x", pady=10)
-            B1 = ttk.Button(popup, text="??", command = popup.destroy)
+            popup.wm_title("Error")
+            label = ttk.Label(popup, text="Username or Password contains invalid characters.\n         (letters, numbers and underscores only.)", font=('Helvetica'))
+            label.pack(side="top", fill="x", pady=20)
+            B1 = ttk.Button(popup, text="Try again", command = popup.destroy)
             B1.pack()
             popup.mainloop()
+        else:
+            if client.Login(self.master.client, usrname, passwd):
+                self.master.switch_frame(MainPage)
+            else:
+                popup = tk.Tk()
+                popup.wm_title("Error")
+                label = ttk.Label(popup, text="Wrong Username or Password", font=('Helvetica'))
+                label.pack(side="top", fill="x", pady=10)
+                B1 = ttk.Button(popup, text="Try again", command = popup.destroy)
+                B1.pack()
+                popup.mainloop()
+
+
+class RegisterPage(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        self.bg_color = 'DeepSkyBlue2'
+        self.master.configure(bg = self.bg_color)
+        self.configure(bg = self.bg_color)
+
+        tk.Label(self, bg = self.bg_color).grid(row = 0, column = 0, columnspan=4, rowspan = 1, pady = 0) 
+        tk.Label(self, text="Please enter", font=('Helvetica', 16, "bold"), bg = self.bg_color).grid(row = 2, columnspan=4, rowspan = 1) 
+        tk.Label(self, text="following informations.", font=('Helvetica', 16, "bold"), bg = self.bg_color).grid(row = 3, columnspan=4, rowspan = 1) 
+        tk.Label(self, bg = self.bg_color).grid(row = 4, column = 0, columnspan=4, rowspan = 1, pady = 1)     
+
+        # username
+        self.username = tk.StringVar()
+        tk.Label(self, text="--- Username ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 5, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.username).grid(row = 7, columnspan=4, pady = 5)
+
+        tk.Label(self, bg = self.bg_color).grid(row = 8, column = 0, columnspan=4, rowspan = 2)
+
+        # password
+        self.password = tk.StringVar()
+        tk.Label(self, text="--- Password ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 9, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.password).grid(row = 11, columnspan=4, pady = 5)
+
+        tk.Label(self, bg = self.bg_color).grid(row = 12, column = 0, columnspan=4, rowspan = 2)
+
+        # password again
+        self.password_confirm = tk.StringVar()
+        tk.Label(self, text="---Password Again ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 13, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.password_confirm).grid(row = 15, columnspan=4, pady = 5)
+
+        tk.Label(self, bg = self.bg_color).grid(row = 16, column = 0, columnspan=4, rowspan = 1, pady = 2)
+
+        # reigster
+        tk.Button(self, text="Register", font=('Helvetica', 12, "bold"), width = 16, command=self.reigster).grid(row = 17, column = 0, columnspan=4, pady = 5)
+
+        # Back to login
+        tk.Button(self, text="Back", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(StartPage)).grid(row = 18, column = 0, columnspan=4, pady = 10)
+
+
+    def reigster(self):
+        usrname = self.username.get()
+        passwd = self.password.get()
+        password_confirm = self.password_confirm.get()
+        print("self.username.get():", usrname)
+        print("self.password.get():", passwd)
+        print("self.password_confirm.get():", password_confirm)
+
+        if passwd != password_confirm:
+            popup = tk.Tk()
+            popup.wm_title("Error")
+            label = ttk.Label(popup, text="Passwords are not same, please enter again.", font=('Helvetica'))
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Try again", command = popup.destroy)
+            B1.pack()
+            popup.mainloop()
+        elif(not re.match("^[A-Za-z0-9_]+$", usrname) or not re.match("^[A-Za-z0-9_]+$", passwd)):
+            popup = tk.Tk()
+            popup.wm_title("Error")
+            label = ttk.Label(popup, text="Username or Password contains invalid characters.\n          (letters, numbers and underscores only.)", font=('Helvetica'))
+            label.pack(side="top", fill="x", pady=20)
+            B1 = ttk.Button(popup, text="Try again", command = popup.destroy)
+            B1.pack()
+            popup.mainloop()
+        else:
+            if client.Sign_up(self.master.client, usrname, passwd, password_confirm):
+                popup = tk.Tk()
+                popup.wm_title("Congratulations!") 
+                label = ttk.Label(popup, text="Your reigstration has completed.\n                      Welcome!", font=('Helvetica'))
+                label.pack(side="top", fill="x", pady=10)
+                B1 = ttk.Button(popup, text="Login now", command = popup.destroy)
+                B1.pack()
+                self.master.switch_frame(StartPage)
+            else:
+                popup = tk.Tk()
+                popup.wm_title("Sorry")
+                label = ttk.Label(popup, text="The account has been used.", font=('Helvetica'))
+                label.pack(side="top", fill="x", pady=10)
+                B1 = ttk.Button(popup, text="Try again", command = popup.destroy)
+                B1.pack()
+                popup.mainloop()
+
+
 
 class MainPage(tk.Frame):
     def __init__(self, master):

@@ -25,7 +25,7 @@ class thread_recv_sound(threading.Thread):
     def stop(self):
         self._stop_event.set()
 
-def Sign_up(client):
+def Sign_up(client, Username, Password, CheckPassword):
     client.print_info()
     send_data = States.sign_up
     send_raw_data = send_data.encode("utf-8")
@@ -37,34 +37,22 @@ def Sign_up(client):
 #        print("Somethings went wrong while sign up")
 #        return
     
-    print(recv_data, 'Now sign up:')
-    while True:
-       #===========Loggin============
-        Username = input('Please enter your name: ')
-        Password = getpass.getpass('Password: ')
-        CheckPassword = getpass.getpass('Password again: ')
-        while Password != CheckPassword or not re.match("^[A-Za-z0-9_]+$", Username) or not re.match("^[A-Za-z0-9_]+$", Password):
-            if not re.match("^[A-Za-z0-9_]+$", Username) or not re.match("^[A-Za-z0-9_]+$", Password):
-                print("Username or Password contains invalid characters, please enter again.")
-                print("(letters, numbers and underscores only.)")
-                Username = input('Please enter your name: ')
-            else:
-                print("Passwords are not same, please enter again.")
-            # maybe we can add some machanism for client who don't want to keep signing up
-            Password = getpass.getpass('Password: ')
-            CheckPassword = getpass.getpass('Password again: ')
-            
-        send_data = Username + ',' + Password
-        send_raw_data = send_data.encode('utf-8')
-        client.connect.sendall(send_raw_data)
-        recv_raw_data = client.connect.recv(1024)
-        recv_data = recv_raw_data.decode("utf-8")
-        state, msg = recv_data.split(":")
-        if state == States.initial:
-            print("Sign up successfully!!")
-            return States.initial
-        elif state == States.sign_up:
-            print("The account has been used.")    
+    print(recv_data, 'Now sign up:')   
+    send_data = Username + ',' + Password
+    send_raw_data = send_data.encode('utf-8')
+    client.connect.sendall(send_raw_data)
+    recv_raw_data = client.connect.recv(1024)
+    recv_data = recv_raw_data.decode("utf-8")
+    state, msg = recv_data.split(":")
+    if msg == "Ent":
+        print("Sign up successfully!!")
+        return True
+    elif msg == "Rej":
+        print("The account has been used.")   
+        return False
+    else:
+        print("Something in client went wrong.")
+        return False
 
 def Login(client, username, password):
     client.print_info()

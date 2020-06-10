@@ -123,6 +123,7 @@ class thread_running_client(threading.Thread):
                 usr, pwd = data.split(",")
                 print( usr, pwd)
                 if usr in client_database:
+                    self.info.state = States.initial
                     send_data = self.info.state + ":" + "Rej"
                 else:
                     self.info.state = States.initial
