@@ -4,10 +4,12 @@ import tkinter.messagebox
 import tkinter.scrolledtext as tst
 import tkinter.filedialog as fd
 from PIL import ImageTk, Image
-import recorder
+#import recorder
 import threading
-import pyaudio
+#import pyaudio
 import wave
+import argparse
+import client
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -18,6 +20,9 @@ class GUI(tk.Tk):
         self._frame = None
         self.switch_frame(StartPage)
 
+        # socket init
+        self.client = client.build_connection(args)
+
     def switch_frame(self, frame_class):
         new_frame = frame_class(self)
         if self._frame is not None:
@@ -27,24 +32,55 @@ class GUI(tk.Tk):
 
 class StartPage(tk.Frame):
     def __init__(self, master):
-        tk.Frame.__init__(self, master)
+        # GUI is master
+        self.master = master
+        tk.Frame.__init__(self, self.master)
         self.bg_color = 'DeepSkyBlue2'
-        master.configure(bg = self.bg_color)
-        self.configure(bg = self.bg_color)      
+        self.master.configure(bg = self.bg_color)
+        self.configure(bg = self.bg_color)  
+
         tk.Label(self, bg = self.bg_color).grid(row = 0, column = 0, columnspan=4, rowspan = 1, pady = 5)
         tk.Label(self, text="CNL", font=('Helvetica', 48, "bold"), bg = self.bg_color).grid(row = 1, column = 0, columnspan=4, rowspan = 3)
         tk.Label(self, text="Walkie-Talkie", font=('Helvetica', 24, "bold"), bg = self.bg_color).grid(row = 4, columnspan=4, rowspan = 2) 
         tk.Label(self, bg = self.bg_color).grid(row = 6, column = 0, columnspan=4, rowspan = 1, pady = 0)       
+
+        # username
+        self.username = tk.StringVar()
         tk.Label(self, text="--- Username ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 8, columnspan=4, pady = 5)
-        tk.Entry(self).grid(row = 10, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.username).grid(row = 10, columnspan=4, pady = 5)
+
         tk.Label(self, bg = self.bg_color).grid(row = 11, column = 0, columnspan=4, rowspan = 2)
+
+        # password
+        self.password = tk.StringVar()
         tk.Label(self, text="--- Password ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 12, columnspan=4, pady = 5)
-        tk.Entry(self).grid(row = 14, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.password).grid(row = 14, columnspan=4, pady = 5)
+
+
         tk.Label(self, bg = self.bg_color).grid(row = 15, column = 0, columnspan=4, rowspan = 1, pady = 0)
-        tk.Button(self, text="Login", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(MainPage)).grid(row = 16, column = 0, columnspan=4, pady = 10)
+
+        # login
+        tk.Button(self, text="Login", font=('Helvetica', 12, "bold"), width = 16, command=self.login).grid(row = 16, column = 0, columnspan=4, pady = 10)
+
+        # reigster
     ### TODO ###
         tk.Button(self, text="Register", font=('Helvetica', 12, "bold"), width = 16, command=lambda: master.switch_frame(MainPage)).grid(row = 17, column = 0, columnspan=4, pady = 5)
 
+    def login(self):
+        usrname = self.username.get()
+        passwd = self.password.get()
+        print("self.username.get():", usrname)
+        print("self.password.get():", passwd)
+        if client.Login(self.master.client, usrname, passwd):
+            self.master.switch_frame(MainPage)
+        else:
+            popup = tk.Tk()
+            popup.wm_title("!")
+            label = ttk.Label(popup, text="Wrong Username or Password", font=('Helvetica'))
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="??", command = popup.destroy)
+            B1.pack()
+            popup.mainloop()
 
 class MainPage(tk.Frame):
     def __init__(self, master):
@@ -62,12 +98,13 @@ class MainPage(tk.Frame):
         
         self.record_button.bind('<ButtonPress-1>', lambda event: self.create_recording_thread())#self.start_recording())
         self.record_button.bind('<ButtonRelease-1>', lambda event: self.stop_recording())
-        self.login_button = tk.Button(self, text="logout", command=lambda: master.switch_frame(StartPage))
-        self.login_button.grid(row = 3, pady = 5)
+        self.logout_button = tk.Button(self, text="logout", command=lambda: master.switch_frame(StartPage))
+        self.logout_button.grid(row = 3, pady = 5)
     def create_recording_thread(self):
         self.thread_recording = threading.Thread(target = self.start_recording)
         self.thread_recording.setDaemon(True)
         self.thread_recording.start()
+    '''
     def start_recording(self):        
         print('start recording', flush=True)
         self.click = True
@@ -112,8 +149,8 @@ class MainPage(tk.Frame):
             wf.writeframes(b''.join(frames[i*k:i*k+k]))
             wf.close()
         print('-------playing-------', flush=True)
-        for i in range(len(frames)//k):
-            recorder.Recorder.play('record/{:03d}.wav'.format(i))
+        #for i in range(len(frames)//k):
+        #    recorder.Recorder.play('record/{:03d}.wav'.format(i))
         print('-----end playing-----', flush=True)
 
     def stop_recording(self):
@@ -124,12 +161,18 @@ class MainPage(tk.Frame):
         # if self.running != None:
         #     self.running.close()
         #     self.running = None
-
+'''
 # main 
 if __name__ == '__main__':
     # window = tk.Tk()
     # window.title('CNL Walkie-Talkie')
     # window.geometry('300x500')
     # window.resizable(0, 0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("IP", type=str, help="IP of the server")
+    parser.add_argument("port", type=int, help="port of the IP")
+    global args
+    args = parser.parse_args()
+
     app = GUI()
     app.mainloop()
