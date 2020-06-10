@@ -84,6 +84,7 @@ class thread_running_client(threading.Thread):
             raw_data = self.info.connect.recv(1024)
             data = raw_data.decode('utf-8')
             print("First data", data)
+           #print(self.info.state)
             if self.info.state == States.initial:
                 if data == States.sign_up:
                     self.info.state = States.sign_up
@@ -107,7 +108,7 @@ class thread_running_client(threading.Thread):
                 print( usr, pwd)
                 if usr not in client_database or client_database[usr] != pwd:
                     send_data = self.info.state + ":" + "Wrong"
-                    self.info.state = States.waiting_for_talk
+                   # self.info.state = States.waiting_for_talk
                 else:
                     self.info.state = States.waiting_for_talk
                     send_data = self.info.state + ":" + "Ent"
@@ -116,6 +117,7 @@ class thread_running_client(threading.Thread):
 
                 send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
+
 
             elif self.info.state == States.sign_up:
                 usr, pwd = data.split(",")
@@ -128,12 +130,18 @@ class thread_running_client(threading.Thread):
                     self.info.username = usr
                     self.info.password = pwd
                     client_database[usr] = pwd
+                    with open('db.json', 'w', encoding='utf-8') as f: #Save New Database
+                        json.dump(client_database,f)
+                        for x in client_database:
+                            print(x, client_database)  
 
                 send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
 
             elif self.info.state == States.waiting_for_talk:
+                #print(data)
                 if data == "Req":
+                    #print(123)
                     if mic_lock.acquire(blocking=False):
                         self.info.state = States.talking
                         send_data =  self.info.state + ":" + "Mic_ACK"
@@ -150,7 +158,8 @@ class thread_running_client(threading.Thread):
                     self.info.state = States.waiting_for_talk
                     send_data = self.info.state + ":" + "Ent"
                     send_raw_data = send_data.encode("utf-8")
-                    self.info.connect.sendall(send_raw_data)
+                    #self.info.connect.sendall(send_raw_data)
+                    mic_lock.release()
                     ############TODO################
                     #    Recv MSG                  #
                     '''
@@ -207,8 +216,4 @@ if __name__ == "__main__":
     #listening.stop()
     listening.join()
     
-    with open('db.json', 'w', encoding='utf-8') as f: #Save New Database
-        json.dumps(client_database)
-        for x in client_database:
-            print(x, client_database)  
     server.close()

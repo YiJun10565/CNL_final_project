@@ -2,6 +2,7 @@ import socket
 import threading
 import getpass
 import argparse
+import time
 import re
 from Variables import States, Client_info
 
@@ -152,15 +153,16 @@ if __name__ == "__main__":
                     recv_data = recv_raw_data.decode("utf-8")
                     print(recv_data)
                     state, msg = recv_data.split(":")
-                    if (msg == 'MIC_ACK'):
-                        for msg in range(10):  #Change this to vocal file
+                    if (msg == 'Mic_ACK'):
+                        for msg in range(2):  #Change this to vocal file
                             data = input("Talking...... :")
                             data = data.encode('utf-8')
                             client.connect.sendall(data)
+                        time.sleep(0.1)
                         data = 'quit'
                         data = data.encode('utf-8')
                         client.connect.sendall(data)
-                    elif (msg == 'MIC_REJ'):
+                    elif (msg == 'Mic_REJ'):
                         print('Microphone Reject') #Wait a second
                         sleep(1)
 
