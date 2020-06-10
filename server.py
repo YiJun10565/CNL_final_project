@@ -98,8 +98,13 @@ class thread_running_client(threading.Thread):
                     self._stop_event.set()
                     return
                 else:
-                    send_data = self.info.state + ":" + "NoImpl"
-                    print("not implement")
+                    #send_data = self.info.state + ":" + "NoImpl"
+                    self.info.connect.close()
+                    client_list.remove(self.info)
+                    self._stop_event.set()
+                    #print("not implement")
+                    return
+
                 send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
                     
@@ -151,6 +156,13 @@ class thread_running_client(threading.Thread):
                 elif data == "quit":
                     self.info.state = States.initial
                     send_data = self.info.state + ":" + "Ent"
+                else:
+                    self.info.connect.close()
+                    client_list.remove(self.info)
+                    self._stop_event.set()
+                    print("Client abnormal disconect.")
+                    return
+                
                 send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
 

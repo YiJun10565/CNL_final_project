@@ -95,6 +95,7 @@ class StartPage(tk.Frame):
 class RegisterPage(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
+        self.master = master
         self.bg_color = 'DeepSkyBlue2'
         self.master.configure(bg = self.bg_color)
         self.configure(bg = self.bg_color)
@@ -192,8 +193,13 @@ class MainPage(tk.Frame):
         
         self.record_button.bind('<ButtonPress-1>', lambda event: self.create_recording_thread())#self.start_recording())
         self.record_button.bind('<ButtonRelease-1>', lambda event: self.stop_recording())
-        self.logout_button = tk.Button(self, text="logout", command=lambda: master.switch_frame(StartPage))
-        self.logout_button.grid(row = 3, pady = 5)
+        self.logout_button = tk.Button(self, text="logout", command=self.logout)
+        self.logout_button.grid(row = 3, pady = 20)
+
+    def logout(self):
+        client.logout(self.master.client)
+        self.master.switch_frame(StartPage)
+
     def create_recording_thread(self):
         self.thread_recording = threading.Thread(target = self.start_recording)
         self.thread_recording.setDaemon(True)

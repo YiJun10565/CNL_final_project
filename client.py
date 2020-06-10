@@ -89,8 +89,15 @@ def build_connection(args):
     client.connect.connect((IP, port))
     return client
 
-
-
+def logout(client):
+    send_data = "quit"
+    send_raw_data = send_data.encode('utf-8')
+    client.connect.sendall(send_raw_data)
+    recv_raw_data = client.connect.recv(1024)
+    recv_data = recv_raw_data.decode("utf-8")
+    state, msg = recv_data.split(":")
+    print(state, ":", msg)
+    
 
 if __name__ == "__main__":
     #====== arg parsing =========
