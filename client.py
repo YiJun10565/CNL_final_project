@@ -66,7 +66,7 @@ def Sign_up(client):
         elif state == States.sign_up:
             print("The account has been used.")    
 
-def Login(client):
+def Login(client, username, password):
     client.print_info()
     send_data = States.login
     send_raw_data = send_data.encode("utf-8")
@@ -74,25 +74,33 @@ def Login(client):
     
     recv_raw_data = client.connect.recv(1024)
     recv_data = recv_raw_data.decode("utf-8")
-    print(recv_data, 'Now login:')
-    while True:
-       #===========Loggin============
-        Username = input('Please enter your username: ')
-        Password = input('Please enter your password: ')
-        send_data = Username + ',' + Password
-        send_raw_data = send_data.encode('utf-8')
-        print(send_data)
-        client.connect.sendall(send_raw_data)
-        recv_raw_data = client.connect.recv(1024)
-        recv_data = recv_raw_data.decode("utf-8")
-        print(send_data, recv_data)
-        state, msg = recv_data.split(":")
-       ############################################
-        if state == States.waiting_for_talk:
-            print("Login successfully!!")
-            return States.waiting_for_talk
-        else:
-            print("Username or password isn't correct.")
+    print('Now login:', recv_data)
+    send_data = username + "," + password
+    send_raw_data = send_data.encode('utf-8')
+    print("send for login",send_data)
+    client.connect.sendall(send_raw_data)
+    recv_raw_data = client.connect.recv(1024)
+    recv_data = recv_raw_data.decode("utf-8")
+    print(send_data, recv_data)
+    state, msg = recv_data.split(":")
+   ############################################
+    if state == States.waiting_for_talk:
+        print("Login successfully!!")
+        return True
+    else:
+        print("Username or password isn't correct.")
+        return False
+
+
+
+def build_connection(args):
+    IP = args.IP
+    port = args.port
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client = Client_info(connection, IP, port)
+    client.connect.connect((IP, port))
+    return client
+
 
 
 
@@ -102,13 +110,16 @@ if __name__ == "__main__":
     parser.add_argument("IP", type=str, help="IP of the server")
     parser.add_argument("port", type=int, help="port of the IP")
     args = parser.parse_args()
+    main(args)
+    
+def main(args):
     print(args.IP, args.port)
     #======Connect to Server=====
-    IP = args.IP
-    port = args.port
-    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client = Client_info(connection, IP, port)
-    client.connect.connect((IP, port)) #Server IP & Port
+    #IP = args.IP
+    #port = args.port
+    #connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #client = Client_info(connection, IP, port)
+    #client.connect.connect((IP, port)) #Server IP & Port
     # Before login
     # Check operation
     recv_raw_data = client.connect.recv(1024)

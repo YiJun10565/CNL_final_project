@@ -39,9 +39,9 @@ class thread_accept_client(threading.Thread):
                     
                     new_client_info = Client_info(connect, host, port)
                     client_list.append(new_client_info)
-                    send_data = States.initial +  ":" + "Welcome"
-                    send_raw_data = send_data.encode("utf-8")
-                    connect.sendall(send_raw_data)
+                    #send_data = States.initial +  ":" + "Welcome"
+                    #send_raw_data = send_data.encode("utf-8")
+                    #connect.sendall(send_raw_data)
                     running = thread_running_client(new_client_info)
                     running.start()
                 '''
@@ -108,7 +108,7 @@ class thread_running_client(threading.Thread):
                 print( usr, pwd)
                 if usr not in client_database or client_database[usr] != pwd:
                     send_data = self.info.state + ":" + "Wrong"
-                   # self.info.state = States.waiting_for_talk
+                    self.info.state = States.initial
                 else:
                     self.info.state = States.waiting_for_talk
                     send_data = self.info.state + ":" + "Ent"
