@@ -188,16 +188,12 @@ class thread_running_client(threading.Thread):
                     send_raw_data = send_data.encode("utf-8")
                     #self.info.connect.sendall(send_raw_data)
                     mic_lock.release()
-                    ############TODO################
-                    #    Recv MSG                  #
-                    '''
                 else:
                     for client in client_list:
-                        if client == self.info:
+                        if client.sound_socket == None:
                             continue
-                        self.socket.sendall(raw_data)
-                    '''
-                    ################################
+                        client.sound_socket.sendall(raw_data)
+
 
     def stop(self):
         self._stop_event.set()

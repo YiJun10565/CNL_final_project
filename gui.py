@@ -84,6 +84,7 @@ class StartPage(tk.Frame):
             popup.mainloop()
         else:
             if client.Login(self.master.client, usrname, passwd):
+                self.master.client.state = States.waiting_for_talk
                 self.master.switch_frame(MainPage)
             else:
                 popup = tk.Tk()
