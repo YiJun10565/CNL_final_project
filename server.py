@@ -38,6 +38,8 @@ class thread_accept_client(threading.Thread):
                     print(u'the client %s:%s has connected.' % (host, port))
                     raw_data = connect.recv(1024)
                     data = raw_data.decode('utf-8')
+                    print("Second connetion:", data, flush=True)
+
                     if(data == "New"):
                         new_client_info = Client_info(connect, host, port)
                         client_list.append(new_client_info)

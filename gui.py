@@ -85,6 +85,7 @@ class StartPage(tk.Frame):
             popup.mainloop()
         else:
             if client.Login(self.master.client, usrname, passwd):
+                self.master.client.username = usrname
                 self.master.switch_frame(MainPage)
             else:
                 popup = tk.Tk()
@@ -179,7 +180,28 @@ class RegisterPage(tk.Frame):
                 B1.pack()
                 popup.mainloop()
 
+class thread_recv_sound(threading.Thread):
+    def __init__(self, client_socket):
+        threading.Thread.__init__(self)
+        self._stop_event = threading.Event() #For Stopping Thread
+        self.socket = client_socket
 
+    def run(self):
+        fs = 44100 
+        while(self._stop_event.is_set() == False):
+            recv_data = self.socket.recv(1024)
+            recv_data = recv_data.decode()
+            sd.play(recv_data, fs)
+            sd.wait()
+            '''
+            Processing Data....
+
+            Todo:
+            
+
+            '''
+    def stop(self):
+        self._stop_event.set()
 
 class MainPage(tk.Frame):
     def __init__(self, master):
@@ -202,11 +224,12 @@ class MainPage(tk.Frame):
 
         self.audio_socket = client.build_connection(args)
         send_data = self.master.client.username
+        print("while building second connect",send_data, flush=True)
         send_raw_data = send_data.encode('utf-8')
         self.audio_socket.connect.sendall(send_raw_data)
-        #self.recv_sound = client.thread_recv_sound(self.audio_socket.connect)
-        #self.recv_sound.run()
-        
+        self.recv_sound = thread_recv_sound(self.audio_socket.connect)
+        self.recv_sound.start()
+        print("??", flush=True)
 
 
     def logout(self):

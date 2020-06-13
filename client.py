@@ -7,29 +7,6 @@ import re
 from Variables import States, Client_info
 import sounddevice as sd
 
-class thread_recv_sound(threading.Thread):
-    def __init__(self, client_socket):
-        threading.Thread.__init__(self)
-        self._stop_event = threading.Event() #For Stopping Thread
-        self.socket = client_socket
-
-    def run(self):
-        fs = 44100 
-        while(self._stop_event.is_set() == False):
-            recv_data = self.socket.recv(1024)
-            recv_data = recv_data.decode()
-            sd.play(recv_data, fs)
-            sd.wait()
-            '''
-            Processing Data....
-
-            Todo:
-            
-
-            '''
-    def stop(self):
-        self._stop_event.set()
-
 def Sign_up(client, Username, Password, CheckPassword):
     client.print_info()
     send_data = States.sign_up
