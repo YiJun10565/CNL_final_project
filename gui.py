@@ -192,9 +192,6 @@ class MainPage(tk.Frame):
         self.photo = ImageTk.PhotoImage(file = "record.png")
         self.record_button = tk.Button(self, text="record!", image = self.photo, bg = self.bg_color)
         self.record_button.grid(row = 2, pady = 5)
-        self.audio_thread = threading.Thread(target = self.recv_audio)
-        self.audio_thread.setDaemon(True)
-        self.audio_thread.start()
         
         self.record_button.bind('<ButtonPress-1>', lambda event: self.create_recording_thread())#self.start_recording())
         self.record_button.bind('<ButtonRelease-1>', lambda event: self.stop_recording())
@@ -205,7 +202,8 @@ class MainPage(tk.Frame):
         send_data = self.master.client.username
         send_raw_data = send_data.encode('utf-8')
         self.audio_socket.connect.sendall(send_raw_data)
-        
+        self.recv_sound = thread_recv_sound(self.audio_socket.connect)
+        self.recv_sound.run()
 
     def logout(self):
         client.logout(self.master.client)
