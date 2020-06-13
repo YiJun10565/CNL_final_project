@@ -217,8 +217,8 @@ class MainPage(tk.Frame):
         self.record_button = tk.Button(self, text="record!", image = self.photo, bg = self.bg_color)
         self.record_button.grid(row = 2, pady = 5)
         
-        self.record_button.bind('<ButtonPress-1>', lambda event: self.create_recording_thread())#self.start_recording())
-        self.record_button.bind('<ButtonRelease-1>', lambda event: self.stop_recording())
+        self.record_button.bind('<ButtonPress-1>', lambda event: self.Ask_for_mic())#self.start_recording())
+        self.record_button.bind('<ButtonRelease-1>', lambda event: self.release_and_stop())
         self.logout_button = tk.Button(self, text="logout", command=self.logout)
         self.logout_button.grid(row = 3, pady = 20)
 
@@ -229,6 +229,7 @@ class MainPage(tk.Frame):
         self.audio_socket.connect.sendall(send_raw_data)
         self.recv_sound = thread_recv_sound(self.audio_socket.connect)
         self.recv_sound.start()
+        self.get_mic = False
         print("??", flush=True)
 
 
@@ -236,12 +237,33 @@ class MainPage(tk.Frame):
         client.logout(self.master.client)
         self.master.switch_frame(StartPage)
 
+    def Ask_for_mic(self):
+        send_data = "Req"
+        send_raw_data = send_data.encode("utf-8")
+        self.master.client.connect.send_data(send_raw_data)
+        recv_raw_data = self.master.client.connect.recv(1024)
+        recv_data = recv_raw_data.decode("utf-8")
+        state, data = recv_data.split(":")
+        if data == "Mic_ACK":
+            self.get_mic = True
+            self.create_recording_thread(self)
+            self.start_recording()
+        else:
+            popup = tk.Tk()
+            popup.wm_title("Sorry") 
+            label = ttk.Label(popup, text="Someone is talking.\n", font=('Helvetica'), anchor='center', justify = 'center')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Try later", command = popup.destroy)
+            B1.pack()
+
+
+
     def create_recording_thread(self):
         self.thread_recording = threading.Thread(target = self.start_recording)
         self.thread_recording.setDaemon(True)
         self.thread_recording.start()
-    '''
-    def start_recording(self):        
+    ## TODO
+    def start_recording(self): 
         print('start recording', flush=True)
         self.click = True
         chunk = 1024  # Record in chunks of 1024 samples
@@ -288,16 +310,27 @@ class MainPage(tk.Frame):
         #for i in range(len(frames)//k):
         #    recorder.Recorder.play('record/{:03d}.wav'.format(i))
         print('-----end playing-----', flush=True)
+        
+    def release_and_stop(self):
+        if get_mic :
+            self.get_mic = False
+            self.stop_recording()
+            
 
     def stop_recording(self):
         print('stop recording', flush=True)
         self.click = False
         self.thread_recording.join()
-
+        send_data = "quit"
+        send_raw_data = send_data.encode("utf-8")
+        self.master.client.connect.sendall(send_raw_data)
+        recv_raw_data = self.master.client.connect.recv(1024)
+        recv_data = recv_raw_data.decode("utf-8")
+        state, data = recv_data.split(":")
         # if self.running != None:
         #     self.running.close()
         #     self.running = None
-'''
+#'''
 # main 
 if __name__ == '__main__':
     # window = tk.Tk()
