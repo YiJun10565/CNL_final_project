@@ -121,7 +121,7 @@ class RegisterPage(tk.Frame):
 
         # password again
         self.password_confirm = tk.StringVar()
-        tk.Label(self, text="---Password Again ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 13, columnspan=4, pady = 5)
+        tk.Label(self, text="--- Password Again ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 13, columnspan=4, pady = 5)
         tk.Entry(self, textvariable=self.password_confirm).grid(row = 15, columnspan=4, pady = 5)
 
         tk.Label(self, bg = self.bg_color).grid(row = 16, column = 0, columnspan=4, rowspan = 1, pady = 2)
@@ -152,7 +152,7 @@ class RegisterPage(tk.Frame):
         elif(not re.match("^[A-Za-z0-9_]+$", usrname) or not re.match("^[A-Za-z0-9_]+$", passwd)):
             popup = tk.Tk()
             popup.wm_title("Error")
-            label = ttk.Label(popup, text="Username or Password contains invalid characters.\n          (letters, numbers and underscores only.)", font=('Helvetica'))
+            label = ttk.Label(popup, text="Username or Password contains invalid characters.\n(letters, numbers and underscores only.)", font=('Helvetica'), anchor='center', justify = 'center')
             label.pack(side="top", fill="x", pady=20)
             B1 = ttk.Button(popup, text="Try again", command = popup.destroy)
             B1.pack()
@@ -161,7 +161,7 @@ class RegisterPage(tk.Frame):
             if client.Sign_up(self.master.client, usrname, passwd, password_confirm):
                 popup = tk.Tk()
                 popup.wm_title("Congratulations!") 
-                label = ttk.Label(popup, text="Your reigstration has completed.\n                      Welcome!", font=('Helvetica'))
+                label = ttk.Label(popup, text="Your registration has completed.\nWelcome!", font=('Helvetica'), anchor='center', justify = 'center')
                 label.pack(side="top", fill="x", pady=10)
                 B1 = ttk.Button(popup, text="Login now", command = popup.destroy)
                 B1.pack()
