@@ -189,12 +189,19 @@ class MainPage(tk.Frame):
         self.photo = ImageTk.PhotoImage(file = "record.png")
         self.record_button = tk.Button(self, text="record!", image = self.photo, bg = self.bg_color)
         self.record_button.grid(row = 2, pady = 5)
-        
+        self.audio_thread = threading.Thread(target = self.recv_audio)
+        self.audio_thread.setDaemon(True)
+        self.audio_thread.start()
         
         self.record_button.bind('<ButtonPress-1>', lambda event: self.create_recording_thread())#self.start_recording())
         self.record_button.bind('<ButtonRelease-1>', lambda event: self.stop_recording())
         self.logout_button = tk.Button(self, text="logout", command=self.logout)
         self.logout_button.grid(row = 3, pady = 20)
+
+    def recv_audio(self):
+        self.audio_socket = client.build_connection(args)
+        self.audio_socket.connect.sendall(self.audio_socket.username.encode("utf-8"))
+        #############################TODO###############################
 
     def logout(self):
         client.logout(self.master.client)
