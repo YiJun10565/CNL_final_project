@@ -11,6 +11,7 @@ import wave
 import argparse
 import client
 import re
+from Variables import States
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -84,7 +85,6 @@ class StartPage(tk.Frame):
             popup.mainloop()
         else:
             if client.Login(self.master.client, usrname, passwd):
-                self.master.client.state = States.waiting_for_talk
                 self.master.switch_frame(MainPage)
             else:
                 popup = tk.Tk()
@@ -183,6 +183,7 @@ class RegisterPage(tk.Frame):
 
 class MainPage(tk.Frame):
     def __init__(self, master):
+        master.client.state = States.waiting_for_talk
         tk.Frame.__init__(self, master)
         self.running = None
         self.click = False
@@ -203,8 +204,10 @@ class MainPage(tk.Frame):
         send_data = self.master.client.username
         send_raw_data = send_data.encode('utf-8')
         self.audio_socket.connect.sendall(send_raw_data)
-        self.recv_sound = thread_recv_sound(self.audio_socket.connect)
-        self.recv_sound.run()
+        #self.recv_sound = client.thread_recv_sound(self.audio_socket.connect)
+        #self.recv_sound.run()
+        
+
 
     def logout(self):
         client.logout(self.master.client)
