@@ -13,6 +13,7 @@ class Client_info():
         self.username = ""
         self.password  = ""
         self.state = States.initial
+        self.sound_socket = None
     def print_info(self):
         print("Connect to %s:%d" % (self.host, self.port))
         print("Current state: %s" % self.state)

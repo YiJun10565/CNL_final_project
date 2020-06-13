@@ -36,14 +36,29 @@ class thread_accept_client(threading.Thread):
                      #Todo: client info maintain
                     connect, (host, port) = self.socket.accept()
                     print(u'the client %s:%s has connected.' % (host, port))
+                    raw_data = connect.recv(1024)
+                    data = raw_data.decode('utf-8')
+                    if(data == "New"):
+                        new_client_info = Client_info(connect, host, port)
+                        client_list.append(new_client_info)
+                        #send_data = States.initial +  ":" + "Welcome"
+                        #send_raw_data = send_data.encode("utf-8")
+                        #connect.sendall(send_raw_data)
+                        running = thread_running_client(new_client_info)
+                        running.start()
+                    else:
+                        flag = 0
+                        for idx, info in enumerate(client_list):
+                            if(data == info.username):
+                                client_list[idx].sound_socket = connect
+                                flag = 1
+                                continue
+                        if(flag == 0):
+                            print(data,":Not found. This shouldn't happen.")
+
+
                     
-                    new_client_info = Client_info(connect, host, port)
-                    client_list.append(new_client_info)
-                    #send_data = States.initial +  ":" + "Welcome"
-                    #send_raw_data = send_data.encode("utf-8")
-                    #connect.sendall(send_raw_data)
-                    running = thread_running_client(new_client_info)
-                    running.start()
+                    
                 '''
                 else:  
 

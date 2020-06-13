@@ -23,6 +23,9 @@ class GUI(tk.Tk):
 
         # socket init
         self.client = client.build_connection(args)
+        send_data = "New"
+        send_raw_data = send_data.encode('utf-8')
+        self.client.connect.sendall(send_raw_data)
 
     def switch_frame(self, frame_class):
         new_frame = frame_class(self)
@@ -198,10 +201,11 @@ class MainPage(tk.Frame):
         self.logout_button = tk.Button(self, text="logout", command=self.logout)
         self.logout_button.grid(row = 3, pady = 20)
 
-    def recv_audio(self):
         self.audio_socket = client.build_connection(args)
-        self.audio_socket.connect.sendall(self.audio_socket.username.encode("utf-8"))
-        #############################TODO###############################
+        send_data = self.master.client.username
+        send_raw_data = send_data.encode('utf-8')
+        self.audio_socket.connect.sendall(send_raw_data)
+        
 
     def logout(self):
         client.logout(self.master.client)
