@@ -282,12 +282,9 @@ class MainPage(tk.Frame):
             print("Is recording")
             sd.wait()
 
-
-
     def release_and_stop(self):
         if self.get_mic :
             self.get_mic = False
-            self.stop_recording()
             print('stop recording', flush=True)
             self.click = False
             self.thread_recording.join()
