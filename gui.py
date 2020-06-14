@@ -252,7 +252,6 @@ class MainPage(tk.Frame):
             print("Get_Mic", flush=True)
             self.get_mic = True
             self.create_recording_thread()
-            self.start_recording()
         else:
             popup = tk.Tk()
             popup.wm_title("Sorry") 
@@ -267,7 +266,7 @@ class MainPage(tk.Frame):
         self.thread_recording = threading.Thread(target = self.start_recording)
         self.thread_recording.setDaemon(True)
         self.thread_recording.start()
-    ## TODO
+
     def start_recording(self): 
         print('start recording', flush=True)
         self.click = True
@@ -275,74 +274,32 @@ class MainPage(tk.Frame):
         channels = 2
         fs = 44100  # Record at 44100 samples per second
         duration  = 0.5
-        # filename = "record/output.wav"
-
-        #p = pyaudio.PyAudio()  # Create an interface to PortAudio
-        #stream = p.open(format=sample_format, channels=channels, rate=fs, frames_per_buffer=chunk, input=True)
-
-        #frames = []  # Initialize array to store frames
-
         # Store data in chunks for 3 seconds
         while self.click:
-            print(self.get_mic)
+            print("get_mic:", self.get_mic)
             my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=2, dtype='float64')
             print(type(my_recording))
             print("Is recording")
             sd.wait()
-        # Stop and close the stream 
-        # Terminate the PortAudio interface
-        # p.terminate()
-        # index = 0
-        # while self.click:
-            
-        #     #for i in range(100):
-        #     self.running = recorder.Recorder(channels=1).record(0.1, output='record/{:03d}.wav'.format(index))
-        #     # print('-----recording-----', flush=True)
-            
-        #     #for i in range(100):
-            
-        #     # print('-----playing-----', flush=True)
-        #     index += 1
-        '''
-        k = 32
-        for i in range(len(frames)//k):
-            wf = wave.open('record/{:03d}.wav'.format(i), 'wb')
-            wf.setnchannels(channels)
-            wf.setsampwidth(p.get_sample_size(sample_format))
-            wf.setframerate(fs)
-            wf.writeframes(b''.join(frames[i*k:i*k+k]))
-            wf.close()
-        print('-------playing-------', flush=True)
-        #for i in range(len(frames)//k):
-        #    recorder.Recorder.play('record/{:03d}.wav'.format(i))
-        print('-----end playing-----', flush=True)
-        '''
+
+
+
     def release_and_stop(self):
         if self.get_mic :
             self.get_mic = False
             self.stop_recording()
-            
+            print('stop recording', flush=True)
+            self.click = False
+            self.thread_recording.join()
+            send_data = "quit"
+            send_raw_data = send_data.encode("utf-8")
+            self.master.client.connect.sendall(send_raw_data)
+            recv_raw_data = self.master.client.connect.recv(1024)
+            recv_data = recv_raw_data.decode("utf-8")
+            state, data = recv_data.split(":")
 
-    def stop_recording(self):
-        print('stop recording', flush=True)
-        self.click = False
-        self.thread_recording.join()
-        send_data = "quit"
-        send_raw_data = send_data.encode("utf-8")
-        self.master.client.connect.sendall(send_raw_data)
-        recv_raw_data = self.master.client.connect.recv(1024)
-        recv_data = recv_raw_data.decode("utf-8")
-        state, data = recv_data.split(":")
-        # if self.running != None:
-        #     self.running.close()
-        #     self.running = None
-#'''
-# main 
+
 if __name__ == '__main__':
-    # window = tk.Tk()
-    # window.title('CNL Walkie-Talkie')
-    # window.geometry('300x500')
-    # window.resizable(0, 0)
     parser = argparse.ArgumentParser()
     parser.add_argument("IP", type=str, help="IP of the server")
     parser.add_argument("port", type=int, help="port of the IP")
