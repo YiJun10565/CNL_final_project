@@ -15,7 +15,7 @@ import sounddevice as sd
 import numpy as np 
 import scipy.io.wavfile as wav 
 from Variables import States
-
+import pickle
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -193,8 +193,10 @@ class thread_recv_sound(threading.Thread):
     def run(self):
         fs = 44100 
         while(self._stop_event.is_set() == False):
-            recv_data = self.socket.recv(1024)
-            recv_data = recv_data.decode()
+            recv_data = self.socket.recv(4096)
+            recv_data = pickle.loads(recv_data)
+            #recv_data = recv_data.decode()
+            
             sd.play(recv_data, fs)
             sd.wait()
             '''
@@ -202,7 +204,7 @@ class thread_recv_sound(threading.Thread):
 
             Todo:
             
-
+/
             '''
     def stop(self):
         self._stop_event.set()
@@ -243,10 +245,12 @@ class MainPage(tk.Frame):
 
     def Ask_for_mic(self):
         send_data = "Req"
-        send_raw_data = send_data.encode("utf-8")
+        send_raw_data = pickle.dumps(send_data)
+        #send_raw_data = send_data.encode("utf-8")
         self.master.client.connect.sendall(send_raw_data)
         recv_raw_data = self.master.client.connect.recv(1024)
-        recv_data = recv_raw_data.decode("utf-8")
+        recv_data = pickle.loads(recv_raw_data)
+        #recv_data = recv_raw_data.decode("utf-8")
         state, data = recv_data.split(":")
         if data == "Mic_ACK":
             print("Get_Mic", flush=True)
@@ -272,7 +276,7 @@ class MainPage(tk.Frame):
         chunk = 1024  # Record in chunks of 1024 samples
         channels = 2
         fs = 44100  # Record at 44100 samples per second
-        duration  = 0.5
+        duration  = 0.1
         # Store data in chunks for 3 seconds
         while self.get_mic:
             print("get_mic:", self.get_mic)
@@ -280,6 +284,10 @@ class MainPage(tk.Frame):
             print(type(my_recording))
             print("Is recording")
             sd.wait()
+            send_raw_data = pickle.dumps(my_recording)
+            self.master.client.connect.sendall(send_raw_data)
+            print(bytes(send_raw_data))
+         
 
     def release_and_stop(self):
         if self.get_mic :
@@ -288,10 +296,12 @@ class MainPage(tk.Frame):
             self.thread_recording.join()
             print("If join?", flush=True)
             send_data = "quit"
-            send_raw_data = send_data.encode("utf-8")
+            send_raw_data = pickle.dumps(send_data)
+            #send_raw_data = send_data.encode("utf-8")
             self.master.client.connect.sendall(send_raw_data)
             recv_raw_data = self.master.client.connect.recv(1024)
-            recv_data = recv_raw_data.decode("utf-8")
+            recv_data = pickle.loads(recv_raw_data)
+            #recv_data = recv_raw_data.decode("utf-8")
             state, data = recv_data.split(":")
 
 

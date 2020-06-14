@@ -4,7 +4,7 @@ import json
 import select
 import argparse
 from Variables import States, Client_info
-
+import pickle
 #TODO: client database lock, client list lock
 
 '''
@@ -98,9 +98,9 @@ class thread_running_client(threading.Thread):
     def run(self):
         print("Connection Start", flush=True)
         while not self._stop_event.is_set():
-            raw_data = self.info.connect.recv(1024)
+            raw_data = self.info.connect.recv(4096)
             #data = raw_data.decode('utf-8')
-            data = pickle.loads(data)
+            data = pickle.loads(raw_data)
             print("First data", data)
            #print(self.info.state)
             if self.info.state == States.initial:
