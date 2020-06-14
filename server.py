@@ -188,7 +188,7 @@ class thread_running_client(threading.Thread):
                     self.info.state = States.waiting_for_talk
                     send_data = self.info.state + ":" + "Ent"
                     send_raw_data = send_data.encode("utf-8")
-                    #self.info.connect.sendall(send_raw_data)
+                    self.info.connect.sendall(send_raw_data)
                     mic_lock.release()
                 else:
                     for client in client_list:
