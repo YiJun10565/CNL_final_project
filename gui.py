@@ -193,7 +193,7 @@ class thread_recv_sound(threading.Thread):
     def run(self):
         fs = 44100 
         while(self._stop_event.is_set() == False):
-            recv_data = self.socket.recv(4096)
+            recv_data = self.socket.recv(40960)
             recv_data = pickle.loads(recv_data)
             #recv_data = recv_data.decode()
             
