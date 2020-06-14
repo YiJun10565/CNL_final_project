@@ -269,13 +269,12 @@ class MainPage(tk.Frame):
 
     def start_recording(self): 
         print('start recording', flush=True)
-        self.click = True
         chunk = 1024  # Record in chunks of 1024 samples
         channels = 2
         fs = 44100  # Record at 44100 samples per second
         duration  = 0.5
         # Store data in chunks for 3 seconds
-        while self.click:
+        while self.get_mic:
             print("get_mic:", self.get_mic)
             my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=2, dtype='float64')
             print(type(my_recording))
@@ -286,8 +285,8 @@ class MainPage(tk.Frame):
         if self.get_mic :
             self.get_mic = False
             print('stop recording', flush=True)
-            self.click = False
             self.thread_recording.join()
+            print("If join?", flush=True)
             send_data = "quit"
             send_raw_data = send_data.encode("utf-8")
             self.master.client.connect.sendall(send_raw_data)
