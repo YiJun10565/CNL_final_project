@@ -11,6 +11,7 @@ import wave
 import argparse
 import client
 import re
+import sounddevice as sd
 from Variables import States
 
 class GUI(tk.Tk):
@@ -247,7 +248,7 @@ class MainPage(tk.Frame):
         if data == "Mic_ACK":
             print("Get_Mic", flush=True)
             self.get_mic = True
-            self.create_recording_thread(self)
+            self.create_recording_thread()
             self.start_recording()
         else:
             popup = tk.Tk()
