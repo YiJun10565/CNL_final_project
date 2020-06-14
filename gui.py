@@ -12,7 +12,10 @@ import argparse
 import client
 import re
 import sounddevice as sd
+import numpy as np 
+import scipy.io.wavfile as wav 
 from Variables import States
+
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -269,26 +272,26 @@ class MainPage(tk.Frame):
         print('start recording', flush=True)
         self.click = True
         chunk = 1024  # Record in chunks of 1024 samples
-        sample_format = pyaudio.paInt16  # 16 bits per sample
         channels = 2
         fs = 44100  # Record at 44100 samples per second
+        duration  = 0.5
         # filename = "record/output.wav"
 
-        p = pyaudio.PyAudio()  # Create an interface to PortAudio
-        stream = p.open(format=sample_format, channels=channels, rate=fs, frames_per_buffer=chunk, input=True)
+        #p = pyaudio.PyAudio()  # Create an interface to PortAudio
+        #stream = p.open(format=sample_format, channels=channels, rate=fs, frames_per_buffer=chunk, input=True)
 
-        frames = []  # Initialize array to store frames
+        #frames = []  # Initialize array to store frames
 
         # Store data in chunks for 3 seconds
         while self.click:
-            data = stream.read(chunk)
-            frames.append(data)
-
+            print(self.get_mic)
+            my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=2, dtype='float64')
+            print(type(my_recording))
+            print("Is recording")
+            sd.wait()
         # Stop and close the stream 
-        stream.stop_stream()
-        stream.close()
         # Terminate the PortAudio interface
-        p.terminate()
+        # p.terminate()
         # index = 0
         # while self.click:
             
@@ -300,6 +303,7 @@ class MainPage(tk.Frame):
             
         #     # print('-----playing-----', flush=True)
         #     index += 1
+        '''
         k = 32
         for i in range(len(frames)//k):
             wf = wave.open('record/{:03d}.wav'.format(i), 'wb')
@@ -312,7 +316,7 @@ class MainPage(tk.Frame):
         #for i in range(len(frames)//k):
         #    recorder.Recorder.play('record/{:03d}.wav'.format(i))
         print('-----end playing-----', flush=True)
-        
+        '''
     def release_and_stop(self):
         if self.get_mic :
             self.get_mic = False
