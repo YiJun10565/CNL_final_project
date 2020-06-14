@@ -6,14 +6,18 @@ import time
 import re
 from Variables import States, Client_info
 import sounddevice as sd
-
+import pickle
 def Sign_up(client, Username, Password, CheckPassword):
     client.print_info()
     send_data = States.sign_up
-    send_raw_data = send_data.encode("utf-8")
+    
+    send_raw_data = pickle.dumps(send_raw_data)
+    #send_raw_data = send_data.encode("utf-8")
     client.connect.sendall(send_raw_data)
     recv_raw_data = client.connect.recv(1024)
-    recv_data = recv_raw_data.decode("utf-8")
+    
+    recv_data = pickle.loads(recv_raw_data)
+    #recv_data = recv_raw_data.decode("utf-8")
     state, msg = recv_data.split(":")
 #    if state != States.sign_up:
 #        print("Somethings went wrong while sign up")
@@ -21,10 +25,14 @@ def Sign_up(client, Username, Password, CheckPassword):
     
     print(recv_data, 'Now sign up:')   
     send_data = Username + ',' + Password
-    send_raw_data = send_data.encode('utf-8')
+    
+    send_raw_data = pickle.dumps(send_data)
+    #send_raw_data = send_data.encode('utf-8')
     client.connect.sendall(send_raw_data)
     recv_raw_data = client.connect.recv(1024)
-    recv_data = recv_raw_data.decode("utf-8")
+    recv_data = pickle.loads(recv_raw_data)
+    
+    #recv_data = recv_raw_data.decode("utf-8")
     state, msg = recv_data.split(":")
     if msg == "Ent":
         print("Sign up successfully!!")
@@ -39,18 +47,25 @@ def Sign_up(client, Username, Password, CheckPassword):
 def Login(client, username, password):
     client.print_info()
     send_data = States.login
-    send_raw_data = send_data.encode("utf-8")
+    
+    send_raw_data = pickle.dumps(send_data)
+    #send_raw_data = send_data.encode("utf-8")
     client.connect.sendall(send_raw_data)
     
     recv_raw_data = client.connect.recv(1024)
-    recv_data = recv_raw_data.decode("utf-8")
+    
+    recv_data = pickle.loads(recv_raw_data)
+    #recv_data = recv_raw_data.decode("utf-8")
     print('Now login:', recv_data)
     send_data = username + "," + password
-    send_raw_data = send_data.encode('utf-8')
+    
+    send_raw_data = pickle.dumps(send_data)
+    #send_raw_data = send_data.encode('utf-8')
     print("send for login",send_data)
     client.connect.sendall(send_raw_data)
     recv_raw_data = client.connect.recv(1024)
-    recv_data = recv_raw_data.decode("utf-8")
+    recv_data = pickle.loads(recv_raw_data)
+    #recv_data = recv_raw_data.decode("utf-8")
     print(send_data, recv_data)
     state, msg = recv_data.split(":")
    ############################################
@@ -73,10 +88,13 @@ def build_connection(args):
 
 def logout(client):
     send_data = "quit"
-    send_raw_data = send_data.encode('utf-8')
+
+    send_raw_data = pickle.dumps(send_raw_data)
+    #send_raw_data = send_data.encode('utf-8')
     client.connect.sendall(send_raw_data)
     recv_raw_data = client.connect.recv(1024)
-    recv_data = recv_raw_data.decode("utf-8")
+    recv_data = pickle.loads(recv_raw_data)
+    #recv_data = recv_raw_data.decode("utf-8")
     state, msg = recv_data.split(":")
     print(state, ":", msg)
     

@@ -99,7 +99,8 @@ class thread_running_client(threading.Thread):
         print("Connection Start", flush=True)
         while not self._stop_event.is_set():
             raw_data = self.info.connect.recv(1024)
-            data = raw_data.decode('utf-8')
+            #data = raw_data.decode('utf-8')
+            data = pickle.loads(data)
             print("First data", data)
            #print(self.info.state)
             if self.info.state == States.initial:
@@ -122,7 +123,8 @@ class thread_running_client(threading.Thread):
                     #print("not implement")
                     return
 
-                send_raw_data = send_data.encode("utf-8")
+                send_raw_data = pickle.dumps(send_data)
+                #send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
                     
             elif self.info.state == States.login :
@@ -137,7 +139,8 @@ class thread_running_client(threading.Thread):
                     self.info.username = usr
                     self.info.password = pwd
 
-                send_raw_data = send_data.encode("utf-8")
+                send_raw_data = pickle.dumps(send_data)
+                #send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
 
 
@@ -157,8 +160,9 @@ class thread_running_client(threading.Thread):
                         json.dump(client_database,f)
                         for x in client_database:
                             print(x, client_database)  
-
-                send_raw_data = send_data.encode("utf-8")
+                
+                send_raw_data = pickle.dumps(send_data)
+                #send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
 
             elif self.info.state == States.waiting_for_talk:
@@ -179,15 +183,16 @@ class thread_running_client(threading.Thread):
                     self._stop_event.set()
                     print("Client abnormal disconect.")
                     return
-                
-                send_raw_data = send_data.encode("utf-8")
+                send_raw_data = pickle.dumps(send_data) 
+                #send_raw_data = send_data.encode("utf-8")
                 self.info.connect.sendall(send_raw_data)
 
             elif self.info.state == States.talking:
                 if data == "quit":
                     self.info.state = States.waiting_for_talk
                     send_data = self.info.state + ":" + "Ent"
-                    send_raw_data = send_data.encode("utf-8")
+                    send_raw_data = pickle.dumps(send_data)
+                    #send_raw_data = send_data.encode("utf-8")
                     self.info.connect.sendall(send_raw_data)
                     mic_lock.release()
                 else:
