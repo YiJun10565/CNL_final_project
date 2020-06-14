@@ -240,11 +240,12 @@ class MainPage(tk.Frame):
     def Ask_for_mic(self):
         send_data = "Req"
         send_raw_data = send_data.encode("utf-8")
-        self.master.client.connect.send_data(send_raw_data)
+        self.master.client.connect.sendall(send_raw_data)
         recv_raw_data = self.master.client.connect.recv(1024)
         recv_data = recv_raw_data.decode("utf-8")
         state, data = recv_data.split(":")
         if data == "Mic_ACK":
+            print("Get_Mic", flush=True)
             self.get_mic = True
             self.create_recording_thread(self)
             self.start_recording()
@@ -312,7 +313,7 @@ class MainPage(tk.Frame):
         print('-----end playing-----', flush=True)
         
     def release_and_stop(self):
-        if get_mic :
+        if self.get_mic :
             self.get_mic = False
             self.stop_recording()
             
