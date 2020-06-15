@@ -89,7 +89,7 @@ def build_connection(args):
 def logout(client):
     send_data = "quit"
 
-    send_raw_data = pickle.dumps(send_raw_data)
+    send_raw_data = pickle.dumps(send_data)
     #send_raw_data = send_data.encode('utf-8')
     client.connect.sendall(send_raw_data)
     recv_raw_data = client.connect.recv(1024)

@@ -231,7 +231,7 @@ class thread_running_client(threading.Thread):
                         # data = pickle.loads(b''.join(data))
                         self.thread_broadcasting = []
                         for client in client_list:
-                            if client.sound_socket == None or client == self.info:
+                            if client.sound_socket == None or client is self.info:
                                 continue
                             thread = threading.Thread(target = self.broadcast, args=(client.sound_socket, data))
                             thread.setDaemon(True)

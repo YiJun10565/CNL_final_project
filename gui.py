@@ -213,7 +213,9 @@ class thread_recv_sound(threading.Thread):
                     # data += raw_data                            
                     data += self.socket.recv(4096)
                 print('receive len = ', len(data), flush=True)
+                
                 data = pickle.loads(data)
+                print(data, flush=True)
                 sd.play(data, fs)
                 sd.wait()
                 send_data = "done"
@@ -294,7 +296,7 @@ class MainPage(tk.Frame):
     def start_recording(self): 
         print('==========start recording==========', flush=True)
         chunk = 1024  # Record in chunks of 1024 samples
-        channels = 1
+        channels = 2
         fs = 44100  # Record at 44100 samples per second
         duration  = 0.1
         # Store data in chunks for 3 seconds
@@ -302,13 +304,15 @@ class MainPage(tk.Frame):
         
         while self.get_mic:
             # print("get_mic:", self.get_mic)
-            my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
+            self.my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
             # print(type(my_recording))
             print("Is recording")
             sd.wait(ignore_errors=False)
+            # sd.play(self.my_recording, fs)
+            # sd.wait()
             # print("done", flush= True)                
-            send_raw_data = pickle.dumps(my_recording)
-            # print(len(send_raw_data), flush=True)
+            send_raw_data = pickle.dumps(self.my_recording)
+            # print(self.my_recording, flush=True)
             send_len = len(send_raw_data)
             send_len = pickle.dumps(send_len)
             self.master.client.connect.sendall(send_len) 
