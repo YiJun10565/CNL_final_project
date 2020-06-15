@@ -5,6 +5,12 @@ import select
 import argparse
 from Variables import States, Client_info
 import pickle
+import signal
+def end(signum, frame):
+	print('Bye~', flush=True)
+	exit(0)
+signal.signal(signal.SIGINT, end)
+signal.signal(signal.SIGTERM, end)
 #TODO: client database lock, client list lock
 
 '''
@@ -47,6 +53,7 @@ class thread_accept_client(threading.Thread):
                         #send_raw_data = send_data.encode("utf-8")
                         #connect.sendall(send_raw_data)
                         running = thread_running_client(new_client_info)
+                        running.setDaemon(True)
                         running.start()
                     else:
                         flag = 0
@@ -94,112 +101,138 @@ class thread_running_client(threading.Thread):
         threading.Thread.__init__(self)
         self.info = client_info
         self._stop_event = threading.Event() #For Stoping Thread
-    
+        self.read_list = [client_info.connect]
+        self.info.connect.setblocking(False)
     def run(self):
         print("Connection Start", flush=True)
         while not self._stop_event.is_set():
-            raw_data = self.info.connect.recv(40960)
-            #data = raw_data.decode('utf-8')
-            data = pickle.loads(raw_data)
-            print("First data", data)
-           #print(self.info.state)
-            if self.info.state == States.initial:
-                if data == States.sign_up:
-                    self.info.state = States.sign_up
-                    send_data = self.info.state + ":" + "Ent"
-                elif data == States.login:
-                    self.info.state = States.login
-                    send_data = self.info.state + ":" + "Ent"
-                elif data == "quit":
-                    self.info.connect.close()
-                    client_list.remove(self.info)
-                    self._stop_event.set()
-                    return
-                else:
-                    #send_data = self.info.state + ":" + "NoImpl"
-                    self.info.connect.close()
-                    client_list.remove(self.info)
-                    self._stop_event.set()
-                    #print("not implement")
-                    return
-
-                send_raw_data = pickle.dumps(send_data)
-                #send_raw_data = send_data.encode("utf-8")
-                self.info.connect.sendall(send_raw_data)
-                    
-            elif self.info.state == States.login :
-                usr,pwd = data.split(",")
-                print( usr, pwd)
-                if usr not in client_database or client_database[usr] != pwd:
-                    send_data = self.info.state + ":" + "Wrong"
-                    self.info.state = States.initial
-                else:
-                    self.info.state = States.waiting_for_talk
-                    send_data = self.info.state + ":" + "Ent"
-                    self.info.username = usr
-                    self.info.password = pwd
-
-                send_raw_data = pickle.dumps(send_data)
-                #send_raw_data = send_data.encode("utf-8")
-                self.info.connect.sendall(send_raw_data)
-
-
-            elif self.info.state == States.sign_up:
-                usr, pwd = data.split(",")
-                print( usr, pwd)
-                if usr in client_database:
-                    self.info.state = States.initial
-                    send_data = self.info.state + ":" + "Rej"
-                else:
-                    self.info.state = States.initial
-                    send_data = self.info.state + ":" + "Ent"
-                    self.info.username = usr
-                    self.info.password = pwd
-                    client_database[usr] = pwd
-                    with open('db.json', 'w', encoding='utf-8') as f: #Save New Database
-                        json.dump(client_database,f)
-                        for x in client_database:
-                            print(x, client_database)  
-                
-                send_raw_data = pickle.dumps(send_data)
-                #send_raw_data = send_data.encode("utf-8")
-                self.info.connect.sendall(send_raw_data)
-
-            elif self.info.state == States.waiting_for_talk:
-                #print(data)
-                if data == "Req":
-                    #print(123)
-                    if mic_lock.acquire(blocking=False):
-                        self.info.state = States.talking
-                        send_data =  self.info.state + ":" + "Mic_ACK"
+            self.readable, self.writable, self.errored = select.select(self.read_list, [], [])
+            # print(self.readable, flush=True)
+            if self.info.connect in self.readable:
+                raw_data = self.info.connect.recv(4096)
+                #data = raw_data.decode('utf-8')
+                data = pickle.loads(raw_data)
+                print("Receive data", data)
+                #print(self.info.state)
+                if self.info.state == States.initial:
+                    if data == States.sign_up:
+                        self.info.state = States.sign_up
+                        send_data = self.info.state + ":" + "Ent"
+                    elif data == States.login:
+                        self.info.state = States.login
+                        send_data = self.info.state + ":" + "Ent"
+                    elif data == "quit":
+                        self.info.connect.close()
+                        client_list.remove(self.info)
+                        self._stop_event.set()
+                        return
                     else:
-                        send_data =  self.info.state + ":" + "Mic_REJ"
-                elif data == "quit":
-                    self.info.state = States.initial
-                    send_data = self.info.state + ":" + "Ent"
-                else:
-                    self.info.connect.close()
-                    client_list.remove(self.info)
-                    self._stop_event.set()
-                    print("Client abnormal disconect.")
-                    return
-                send_raw_data = pickle.dumps(send_data) 
-                #send_raw_data = send_data.encode("utf-8")
-                self.info.connect.sendall(send_raw_data)
+                        #send_data = self.info.state + ":" + "NoImpl"
+                        self.info.connect.close()
+                        client_list.remove(self.info)
+                        self._stop_event.set()
+                        #print("not implement")
+                        return
 
-            elif self.info.state == States.talking:
-                if data == "quit":
-                    self.info.state = States.waiting_for_talk
-                    send_data = self.info.state + ":" + "Ent"
                     send_raw_data = pickle.dumps(send_data)
                     #send_raw_data = send_data.encode("utf-8")
                     self.info.connect.sendall(send_raw_data)
-                    mic_lock.release()
-                else:
-                    for client in client_list:
-                        if client.sound_socket == None:
-                            continue
-                        client.sound_socket.sendall(raw_data)
+                        
+                elif self.info.state == States.login :
+                    usr,pwd = data.split(",")
+                    print( usr, pwd)
+                    if usr not in client_database or client_database[usr] != pwd:
+                        send_data = self.info.state + ":" + "Wrong"
+                        self.info.state = States.initial
+                    else:
+                        self.info.state = States.waiting_for_talk
+                        send_data = self.info.state + ":" + "Ent"
+                        self.info.username = usr
+                        self.info.password = pwd
+
+                    send_raw_data = pickle.dumps(send_data)
+                    #send_raw_data = send_data.encode("utf-8")
+                    self.info.connect.sendall(send_raw_data)
+
+
+                elif self.info.state == States.sign_up:
+                    usr, pwd = data.split(",")
+                    print( usr, pwd)
+                    if usr in client_database:
+                        self.info.state = States.initial
+                        send_data = self.info.state + ":" + "Rej"
+                    else:
+                        self.info.state = States.initial
+                        send_data = self.info.state + ":" + "Ent"
+                        self.info.username = usr
+                        self.info.password = pwd
+                        client_database[usr] = pwd
+                        with open('db.json', 'w', encoding='utf-8') as f: #Save New Database
+                            json.dump(client_database,f)
+                            for x in client_database:
+                                print(x, client_database)  
+                    
+                    send_raw_data = pickle.dumps(send_data)
+                    #send_raw_data = send_data.encode("utf-8")
+                    self.info.connect.sendall(send_raw_data)
+
+                elif self.info.state == States.waiting_for_talk:
+                    #print(data)
+                    if data == "Req":
+                        #print(123)
+                        if mic_lock.acquire(blocking=False):
+                            self.info.state = States.talking
+                            send_data =  self.info.state + ":" + "Mic_ACK"
+                        else:
+                            send_data =  self.info.state + ":" + "Mic_REJ"
+                    elif data == "quit":
+                        self.info.state = States.initial
+                        send_data = self.info.state + ":" + "Ent"
+                    else:
+                        self.info.connect.close()
+                        client_list.remove(self.info)
+                        self._stop_event.set()
+                        print("Client abnormal disconect.")
+                        return
+                    send_raw_data = pickle.dumps(send_data) 
+                    #send_raw_data = send_data.encode("utf-8")
+                    self.info.connect.sendall(send_raw_data)
+
+                elif self.info.state == States.talking:
+                    if data == "quit":
+                        self.info.state = States.waiting_for_talk
+                        send_data = self.info.state + ":" + "Ent"
+                        send_raw_data = pickle.dumps(send_data)
+                        #send_raw_data = send_data.encode("utf-8")
+                        self.info.connect.sendall(send_raw_data)
+                        mic_lock.release()
+                    else:
+                        print('receive sound!!!', flush=True)
+                        send_data = "start"
+                        send_raw_data = pickle.dumps(send_data)
+                        self.info.connect.sendall(send_raw_data)
+                        self.readable, self.writable, self.errored = select.select(self.read_list, [], [])
+                        while self.info.connect not in self.readable:
+                            self.readable, self.writable, self.errored = select.select(self.read_list, [], [])
+                        # self.info.connect.setblocking(True)
+                        recv_len = data
+                        # print(type(data), data, flush=True)
+                        data = b''
+                        data += self.info.connect.recv(4096)
+                        # print(len(data), flush=True)
+                        # self.info.connect.setblocking(False)
+                        while len(data) < recv_len:
+                            # data += raw_data                            
+                            data += self.info.connect.recv(4096)
+                        print('receive len = ', len(data), flush=True)
+                        send_data = "done"
+                        send_raw_data = pickle.dumps(send_data)
+                        self.info.connect.sendall(send_raw_data)
+                        # data = pickle.loads(b''.join(data))
+                        for client in client_list:
+                            if client.sound_socket == None:
+                                continue
+                            client.sound_socket.sendall(data)
 
 
     def stop(self):
@@ -236,6 +269,7 @@ if __name__ == "__main__":
     mic_lock = threading.Lock()
     #======Start Listening======
     listening = thread_accept_client(server, client_list)
+    listening.setDaemon(True)
     listening.start()
 
 
