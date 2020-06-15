@@ -16,6 +16,7 @@ import numpy as np
 import scipy.io.wavfile as wav 
 from Variables import States
 import pickle
+import select
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -189,23 +190,42 @@ class thread_recv_sound(threading.Thread):
         threading.Thread.__init__(self)
         self._stop_event = threading.Event() #For Stopping Thread
         self.socket = client_socket
+        self.read_list = [client_socket]
 
     def run(self):
         fs = 44100 
         while(self._stop_event.is_set() == False):
-            recv_data = self.socket.recv(40960)
-            recv_data = pickle.loads(recv_data)
-            #recv_data = recv_data.decode()
-            
-            sd.play(recv_data, fs)
-            sd.wait()
-            '''
-            Processing Data....
+            self.readable, self.writable, self.errored = select.select(self.read_list, [], [])
+            if self.socket in self.readable:
+                recv_data = self.socket.recv(4096)
+                send_data = "start"
+                send_raw_data = pickle.dumps(send_data)
+                self.socket.sendall(send_raw_data)
+                recv_data = pickle.loads(recv_data)
+                print('Other person is talking', recv_data, flush=True)
+                #recv_data = recv_data.decode()
+                recv_len = recv_data
+                data = b''
+                data += self.socket.recv(4096)
+                # print(len(data), flush=True)
+                # self.info.connect.setblocking(False)
+                while len(data) < recv_len:
+                    # data += raw_data                            
+                    data += self.socket.recv(4096)
+                print('receive len = ', len(data), flush=True)
+                data = pickle.loads(data)
+                sd.play(data, fs)
+                sd.wait()
+                send_data = "done"
+                send_raw_data = pickle.dumps(send_data)
+                self.socket.sendall(send_raw_data)
+                '''
+                Processing Data....
 
-            Todo:
-            
-/
-            '''
+                Todo:
+                
+    /
+                '''
     def stop(self):
         self._stop_event.set()
 

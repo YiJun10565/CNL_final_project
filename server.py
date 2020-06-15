@@ -229,11 +229,27 @@ class thread_running_client(threading.Thread):
                         send_raw_data = pickle.dumps(send_data)
                         self.info.connect.sendall(send_raw_data)
                         # data = pickle.loads(b''.join(data))
+                        self.thread_broadcasting = []
                         for client in client_list:
-                            if client.sound_socket == None:
+                            if client.sound_socket == None or client == self.info:
                                 continue
-                            client.sound_socket.sendall(data)
-
+                            thread = threading.Thread(target = self.broadcast, args=(client.sound_socket, data))
+                            thread.setDaemon(True)
+                            self.thread_broadcasting.append(thread)
+                            thread.start()
+                        for thread in self.thread_broadcasting:
+                            thread.join()
+                            # client.sound_socket.sendall(pickle.dumps(len(data)))
+                            # client.sound_socket.sendall(data)
+    def broadcast(self, sound_socket, data):
+        sound_socket.sendall(pickle.dumps(len(data)))
+        recv_raw_data = sound_socket.recv(1024)
+        recv_data = pickle.loads(recv_raw_data)
+        print(recv_data, flush=True)
+        sound_socket.sendall(data)
+        recv_raw_data = sound_socket.recv(1024)
+        recv_data = pickle.loads(recv_raw_data)
+        print(recv_data, flush=True)
 
     def stop(self):
         self._stop_event.set()
