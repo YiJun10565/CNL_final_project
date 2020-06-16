@@ -293,14 +293,22 @@ class MainPage(tk.Frame):
         print('==========start recording==========', flush=True)
         channels = 1
         fs = 44100  # Record at 44100 samples per second
-        duration  = 1
+        duration = 0.5
         self.recording_threads = []
         while self.get_mic:
-            thread_recording = threading.Thread(target = self.start_recording, args=(channels, fs, duration))
+            # print("get_mic:", self.get_mic)
+            my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
+            # print(type(my_recording))
+            print("Is recording")
+            sd.wait(ignore_errors=False)
+            # sd.play(self.my_recording, fs)
+            # sd.wait()
+            # print("done", flush= True)
+            thread_recording = threading.Thread(target = self.start_recording, args=(my_recording))
             thread_recording.setDaemon(True)
             self.recording_threads.append(thread_recording)
             thread_recording.start()
-            time.sleep(duration)
+            # time.sleep(duration)
 
         for thread in self.recording_threads:
             thread.join()
@@ -311,16 +319,8 @@ class MainPage(tk.Frame):
         recv_data = pickle.loads(recv_raw_data)
         state, data = recv_data.split(":")
 
-    def start_recording(self, channels, fs, duration):   
-        # print("get_mic:", self.get_mic)
-        self.my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
-        # print(type(my_recording))
-        print("Is recording")
-        sd.wait(ignore_errors=False)
-        # sd.play(self.my_recording, fs)
-        # sd.wait()
-        # print("done", flush= True)                
-        send_raw_data = pickle.dumps(self.my_recording)
+    def start_recording(self, my_recording):                   
+        send_raw_data = pickle.dumps(my_recording)
         # print(self.my_recording, flush=True)
         send_len = len(send_raw_data)
         send_len = pickle.dumps(send_len)
