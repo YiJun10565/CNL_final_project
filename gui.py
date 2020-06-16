@@ -17,6 +17,7 @@ import scipy.io.wavfile as wav
 from Variables import States
 import pickle
 import select
+import time
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -289,51 +290,50 @@ class MainPage(tk.Frame):
 
 
     def create_recording_thread(self):
-        self.thread_recording = threading.Thread(target = self.start_recording)
-        self.thread_recording.setDaemon(True)
-        self.thread_recording.start()
-
-    def start_recording(self): 
         print('==========start recording==========', flush=True)
-        chunk = 1024  # Record in chunks of 1024 samples
         channels = 1
         fs = 44100  # Record at 44100 samples per second
         duration  = 1
-        # Store data in chunks for 3 seconds
-        
-        
+        self.recording_threads = []
         while self.get_mic:
-            # print("get_mic:", self.get_mic)
-            self.my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
-            # print(type(my_recording))
-            print("Is recording")
-            sd.wait(ignore_errors=False)
-            # sd.play(self.my_recording, fs)
-            # sd.wait()
-            # print("done", flush= True)                
-            send_raw_data = pickle.dumps(self.my_recording)
-            # print(self.my_recording, flush=True)
-            send_len = len(send_raw_data)
-            send_len = pickle.dumps(send_len)
-            self.master.client.connect.sendall(send_len) 
-            recv_raw_data = self.master.client.connect.recv(1024)
-            recv_data = pickle.loads(recv_raw_data)
-            print(recv_data, flush=True)
-            self.master.client.connect.sendall(send_raw_data)
-            recv_raw_data = self.master.client.connect.recv(1024)
-            recv_data = pickle.loads(recv_raw_data)
-            print(recv_data, flush=True)
+            thread_recording = threading.Thread(target = self.start_recording)
+            thread_recording.setDaemon(True)
+            self.recording_threads.append(thread_recording)
+            thread_recording.start()
+            time.sleep(duration)
+            
+        for thread in self.recording_threads:
+            thread.join()
         send_data = "quit"
         send_raw_data = pickle.dumps(send_data)
-        #send_raw_data = send_data.encode("utf-8")
         self.master.client.connect.sendall(send_raw_data)
         recv_raw_data = self.master.client.connect.recv(1024)
         recv_data = pickle.loads(recv_raw_data)
-        #recv_data = recv_raw_data.decode("utf-8")
         state, data = recv_data.split(":")
-        # self.thread_recording.join()
-        # print("If join?", flush=True)
-        exit()
+
+    def start_recording(self):   
+        # print("get_mic:", self.get_mic)
+        self.my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
+        # print(type(my_recording))
+        print("Is recording")
+        sd.wait(ignore_errors=False)
+        # sd.play(self.my_recording, fs)
+        # sd.wait()
+        # print("done", flush= True)                
+        send_raw_data = pickle.dumps(self.my_recording)
+        # print(self.my_recording, flush=True)
+        send_len = len(send_raw_data)
+        send_len = pickle.dumps(send_len)
+        self.master.client.connect.sendall(send_len) 
+        recv_raw_data = self.master.client.connect.recv(1024)
+        recv_data = pickle.loads(recv_raw_data)
+        print(recv_data, flush=True)
+        self.master.client.connect.sendall(send_raw_data)
+        recv_raw_data = self.master.client.connect.recv(1024)
+        recv_data = pickle.loads(recv_raw_data)
+        print(recv_data, flush=True)
+
+        
 
     def release_and_stop(self):
         if self.get_mic :
