@@ -278,7 +278,10 @@ class MainPage(tk.Frame):
         if data == "Mic_ACK":
             print("Get_Mic", flush=True)
             self.get_mic = True
-            self.create_recording_thread()
+            thread_recording = threading.Thread(target = self.create_recording_thread)
+            thread_recording.setDaemon(True)
+            thread_recording.start()
+            # self.create_recording_thread()
         else:
             popup = tk.Tk()
             popup.wm_title("Sorry") 
@@ -304,7 +307,9 @@ class MainPage(tk.Frame):
             # sd.play(self.my_recording, fs)
             # sd.wait()
             # print("done", flush= True)
-            thread_recording = threading.Thread(target = self.start_recording, args=(my_recording))
+            send_raw_data = pickle.dumps(my_recording)
+            send_raw_data = [send_raw_data]
+            thread_recording = threading.Thread(target = self.start_recording, args=(send_raw_data))
             thread_recording.setDaemon(True)
             self.recording_threads.append(thread_recording)
             thread_recording.start()
@@ -318,9 +323,10 @@ class MainPage(tk.Frame):
         recv_raw_data = self.master.client.connect.recv(1024)
         recv_data = pickle.loads(recv_raw_data)
         state, data = recv_data.split(":")
+        exit()
 
-    def start_recording(self, my_recording):                   
-        send_raw_data = pickle.dumps(my_recording)
+    def start_recording(self, send_raw_data):                   
+        
         # print(self.my_recording, flush=True)
         send_len = len(send_raw_data)
         send_len = pickle.dumps(send_len)
