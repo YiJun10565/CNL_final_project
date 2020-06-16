@@ -102,7 +102,7 @@ class thread_running_client(threading.Thread):
         self.info = client_info
         self._stop_event = threading.Event() #For Stoping Thread
         self.read_list = [client_info.connect]
-        self.info.connect.setblocking(False)
+        self.info.connect.setblocking(True)
     def run(self):
         print("Connection Start", flush=True)
         while not self._stop_event.is_set():

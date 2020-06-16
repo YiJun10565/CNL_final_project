@@ -298,7 +298,7 @@ class MainPage(tk.Frame):
         chunk = 1024  # Record in chunks of 1024 samples
         channels = 2
         fs = 44100  # Record at 44100 samples per second
-        duration  = 0.1
+        duration  = 0.2
         # Store data in chunks for 3 seconds
         
         
