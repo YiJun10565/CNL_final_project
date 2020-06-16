@@ -6,6 +6,9 @@ import argparse
 from Variables import States, Client_info
 import pickle
 import signal
+import sys
+global thread_list
+thread_list = []
 def end(signum, frame):
 	print('Bye~', flush=True)
 	exit(0)
@@ -26,6 +29,7 @@ class Client_info():
 class thread_accept_client(threading.Thread):
     global client_list
     global client_database
+    global thread_list
     def __init__(self, listen_socket, client_list): 
         threading.Thread.__init__(self)
         self._stop_event = threading.Event() #For Stoping Thread
@@ -34,6 +38,7 @@ class thread_accept_client(threading.Thread):
         self.read_list = [listen_socket]
 
     def run(self):
+       
         print(u'waiting for connect...',flush=True)
         while not self._stop_event.is_set():
             readable, writable, errored = select.select(self.read_list, [], [])
@@ -55,6 +60,7 @@ class thread_accept_client(threading.Thread):
                         running = thread_running_client(new_client_info)
                         running.setDaemon(True)
                         running.start()
+                        thread_list.append(running)
                     else:
                         flag = 0
                         for idx, info in enumerate(client_list):
@@ -91,6 +97,7 @@ class thread_accept_client(threading.Thread):
                 '''
     def stop(self):
         self._stop_event.set()
+        sys.exit()
 
 class thread_running_client(threading.Thread):
     global mic_lock
@@ -253,7 +260,7 @@ class thread_running_client(threading.Thread):
 
     def stop(self):
         self._stop_event.set()
-
+        sys.exit()
 if __name__ == "__main__":
     #===== arg parsing ===============
     parser = argparse.ArgumentParser()
@@ -287,7 +294,8 @@ if __name__ == "__main__":
     listening = thread_accept_client(server, client_list)
     listening.setDaemon(True)
     listening.start()
-
+    #global thread_list
+    thread_list.append(listening)
 
     ####TODO: ADD SOME CONTROL TO SERVER ex. STOP ALL Client AND QUIT####
     #                                                                   #
@@ -295,6 +303,15 @@ if __name__ == "__main__":
 
 
     #listening.stop()
-    listening.join()
+    while True:
+        print(thread_list)
+        s = input()
+        if s == "quit":
+            for i in thread_list:
+                #i.asdasd()
+                i.stop()
+                #i.quit()
+                i.join()
+    #listening.join()
     
     server.close()
