@@ -296,9 +296,9 @@ class MainPage(tk.Frame):
     def start_recording(self): 
         print('==========start recording==========', flush=True)
         chunk = 1024  # Record in chunks of 1024 samples
-        channels = 2
+        channels = 1
         fs = 44100  # Record at 44100 samples per second
-        duration  = 0.2
+        duration  = 0.4
         # Store data in chunks for 3 seconds
         
         
