@@ -296,12 +296,12 @@ class MainPage(tk.Frame):
         duration  = 1
         self.recording_threads = []
         while self.get_mic:
-            thread_recording = threading.Thread(target = self.start_recording)
+            thread_recording = threading.Thread(target = self.start_recording, args=(channels, fs, duration))
             thread_recording.setDaemon(True)
             self.recording_threads.append(thread_recording)
             thread_recording.start()
             time.sleep(duration)
-            
+
         for thread in self.recording_threads:
             thread.join()
         send_data = "quit"
@@ -311,7 +311,7 @@ class MainPage(tk.Frame):
         recv_data = pickle.loads(recv_raw_data)
         state, data = recv_data.split(":")
 
-    def start_recording(self):   
+    def start_recording(self, channels, fs, duration):   
         # print("get_mic:", self.get_mic)
         self.my_recording = sd.rec(int(duration*fs), samplerate=fs, channels=channels, dtype='float64')
         # print(type(my_recording))
