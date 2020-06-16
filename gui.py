@@ -296,7 +296,7 @@ class MainPage(tk.Frame):
         print('==========start recording==========', flush=True)
         channels = 1
         fs = 44100  # Record at 44100 samples per second
-        duration = 0.5
+        duration = 3
         # self.recording_threads = []
         self.recordings = []
         self.thread_recording = threading.Thread(target = self.start_recording)
