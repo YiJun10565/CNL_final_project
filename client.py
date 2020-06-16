@@ -11,7 +11,7 @@ def Sign_up(client, Username, Password, CheckPassword):
     client.print_info()
     send_data = States.sign_up
     
-    send_raw_data = pickle.dumps(send_raw_data)
+    send_raw_data = pickle.dumps(send_data)
     #send_raw_data = send_data.encode("utf-8")
     client.connect.sendall(send_raw_data)
     recv_raw_data = client.connect.recv(1024)
