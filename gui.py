@@ -65,7 +65,7 @@ class StartPage(tk.Frame):
         # password
         self.password = tk.StringVar()
         tk.Label(self, text="--- Password ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 12, columnspan=4, pady = 5)
-        tk.Entry(self, textvariable=self.password).grid(row = 14, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.password, show="\u2022").grid(row = 14, columnspan=4, pady = 5)
 
 
         tk.Label(self, bg = self.bg_color).grid(row = 15, column = 0, columnspan=4, rowspan = 1, pady = 5)
@@ -126,14 +126,14 @@ class RegisterPage(tk.Frame):
         # password
         self.password = tk.StringVar()
         tk.Label(self, text="--- Password ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 9, columnspan=4, pady = 5)
-        tk.Entry(self, textvariable=self.password).grid(row = 11, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.password, show="\u2022").grid(row = 11, columnspan=4, pady = 5)
 
         tk.Label(self, bg = self.bg_color).grid(row = 12, column = 0, columnspan=4, rowspan = 2)
 
         # password again
         self.password_confirm = tk.StringVar()
         tk.Label(self, text="--- Password Again ---", font=('Helvetica', 14, "bold"), bg = self.bg_color).grid(row = 13, columnspan=4, pady = 5)
-        tk.Entry(self, textvariable=self.password_confirm).grid(row = 15, columnspan=4, pady = 5)
+        tk.Entry(self, textvariable=self.password_confirm, show="\u2022").grid(row = 15, columnspan=4, pady = 5)
 
         tk.Label(self, bg = self.bg_color).grid(row = 16, column = 0, columnspan=4, rowspan = 1, pady = 2)
 
